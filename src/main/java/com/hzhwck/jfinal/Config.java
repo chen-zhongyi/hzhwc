@@ -4,8 +4,8 @@ import com.hzhwck.controller.HelloController;
 import com.hzhwck.controller.MessageController;
 import com.hzhwck.controller.Users.UsersController;
 import com.hzhwck.interceptor.LoggerGlobalInterceptor;
-import com.hzhwck.model.Message;
-import com.hzhwck.model.User;
+import com.hzhwck.model.hwc.User;
+import com.hzhwck.model.system.Account;
 import com.jfinal.config.*;
 import com.jfinal.kit.Prop;
 import com.jfinal.kit.PropKit;
@@ -36,8 +36,14 @@ public class Config extends JFinalConfig {
         ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
         arp.setShowSql(true);
         me.add(arp);
-        arp.addMapping("user", User.class);
-        arp.addMapping("messages", Message.class);
+        //arp.addMapping("user", User.class);
+        //arp.addMapping("messages", Message.class);
+
+        //sys
+        arp.addMapping("hzhwc.account", Account.class);
+
+        //hwc
+        arp.addMapping("hzhwc.hwc_users", User.class);
     }
     public void configInterceptor(Interceptors me) {
         me.addGlobalActionInterceptor(new LoggerGlobalInterceptor());

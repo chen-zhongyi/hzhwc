@@ -9,21 +9,21 @@ public class Account extends Model<Account> {
     public static final Account dao = new Account().dao();
     private static final String tableName = "hzhwc.sys_accounts";
 
-    public Account add(Account account){
+    public static Account add(Account account){
         if(account.save())  return account;
         return null;
     }
 
-    public Account modify(Account account){
+    public static Account modify(Account account){
         if(account.update())    return account;
         return null;
     }
 
-    public boolean delete(String id){
+    public static boolean delete(String id){
         return Account.dao.deleteById(id);
     }
 
-    public Account findByUserName(String userName){
+    public static Account findByUserName(String userName){
         return Account.dao.findFirst("select * from " + tableName + " where userName = " + userName);
     }
 }
