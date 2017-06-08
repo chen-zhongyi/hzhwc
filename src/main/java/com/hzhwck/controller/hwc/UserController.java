@@ -3,6 +3,7 @@ package com.hzhwck.controller.hwc;
 import com.hzhwck.controller.BaseController;
 import com.hzhwck.model.hwc.User;
 import com.hzhwck.model.system.Account;
+import com.hzhwck.model.system.Role;
 import com.hzhwck.util.ResponseUtil;
 import com.hzhwck.util.TimeUtil;
 import com.hzhwck.validator.hwc.UserValidator;
@@ -156,9 +157,21 @@ public class UserController extends BaseController {
 
     /**
      * 用户搜索
-     * @Param pageNumber
+     * @Param pageNumber 第几页,默认值1
+     * @Param pageSize 分页大小，默认值20
+     * @Param orderBy 排序字段，默认id
+     * @Param oder desc, asc
      * @Param filter 过滤信息，字符串【过滤字段:过滤信息,过滤字段:过滤信息..】
      */
+    @ActionKey("/api/hwc/users/search")
+    public void getPageUsers(){
+        int pageNumber = getParaToInt("pageNumber", 1);
+        int pageSize = getParaToInt("pageSize", 20);
+        String orderBy = getPara("oderBy", "a.id");
+        String oder = getPara("oder", "asc");
+        String filter = getPara("filter", "");
+        renderJson(ResponseUtil.setRes("00", "获取用户分页信息成功", User.getPageUsers(pageNumber, pageSize, orderBy, oder, filter)));
+    }
 
     /**
      * 用户信息整合
@@ -178,7 +191,8 @@ public class UserController extends BaseController {
         map.put("areaCode", user.get("areaCode"));
         if(type == 2){
             map.put("pwd", account.get("pwd"));
-            //???添加具体角色信息
+            Role role = Role.dao.findById(account.get("role"));
+            map.put("role", role.toRecord().getColumns());
             map.put("roleMap", null);
         }
         return map;

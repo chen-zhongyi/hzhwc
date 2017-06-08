@@ -3,9 +3,12 @@ package com.hzhwck.jfinal;
 import com.hzhwck.controller.HelloController;
 import com.hzhwck.controller.MessageController;
 import com.hzhwck.controller.Users.UsersController;
+import com.hzhwck.controller.hwc.UserController;
+import com.hzhwck.controller.system.RightsController;
 import com.hzhwck.interceptor.LoggerGlobalInterceptor;
 import com.hzhwck.model.hwc.User;
 import com.hzhwck.model.system.Account;
+import com.hzhwck.model.system.Rights;
 import com.jfinal.config.*;
 import com.jfinal.kit.Prop;
 import com.jfinal.kit.PropKit;
@@ -24,6 +27,12 @@ public class Config extends JFinalConfig {
         me.add("/hello", HelloController.class, "/");
         me.add("/messages", MessageController.class);
         me.add("/user", UsersController.class);
+
+        //system
+        me.add("/api/system/rights", RightsController.class);
+
+        //hwc
+        me.add("/api/hwc/users", UserController.class);
     }
     public void configEngine(Engine me) {}
     public void configPlugin(Plugins me) {
@@ -36,11 +45,10 @@ public class Config extends JFinalConfig {
         ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
         arp.setShowSql(true);
         me.add(arp);
-        //arp.addMapping("user", User.class);
-        //arp.addMapping("messages", Message.class);
 
         //sys
-        arp.addMapping("hzhwc.account", Account.class);
+        arp.addMapping("hzhwc.sys_accounts", Account.class);
+        arp.addMapping("hzhwc.sys_rights", Rights.class);
 
         //hwc
         arp.addMapping("hzhwc.hwc_users", User.class);

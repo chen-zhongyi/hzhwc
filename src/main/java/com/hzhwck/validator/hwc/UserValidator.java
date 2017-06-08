@@ -74,6 +74,14 @@ public class UserValidator extends Validator {
             if(!((Map<String, Object>)c.getSessionAttr("user")).get("userName").equals(c.getPara("userName"))){
                 addError("userName", "用户名出错");
             }
+        }else if(getActionKey().equals("/api/hwc/users/search")){
+            validateInteger("pageNumber", "pageNumber", "第几页必须为数字");
+            validateInteger("pageSize", "pageSize", "分页大小必须为数字");
+            if(c.getPara("oder") != null ){
+                if(!c.getPara("oder").equals("desc") && !c.getPara("oder").equals("asc")){
+                    addError("oder", "为desc或asc");
+                }
+            }
         }
     }
 
