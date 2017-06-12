@@ -37,6 +37,7 @@ public class User extends Model<User> {
             String[] filters = filter.split(",");
             List<String> filtersAccess = new LinkedList<String>();
             for(String temp : filters){
+                if(temp.split(":").length != 2) continue;
                 for(int i = 0;i < a.length;++i){
                     if(temp.split(":")[0].equals(a[i])){
                         filtersAccess.add("a." + temp);
@@ -52,7 +53,7 @@ public class User extends Model<User> {
             }
             for(int i = 0;i < filtersAccess.size();++i){
                 String[] temp = filters[i].split(":");
-                sb.append(temp[0] + "='%" + temp[1] + "%'");
+                sb.append(temp[0] + " like '%" + temp[1] + "%'");
                 if(i != filtersAccess.size() - 1){
                     sb.append(" and ");
                 }

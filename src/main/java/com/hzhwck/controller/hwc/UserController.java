@@ -1,6 +1,7 @@
 package com.hzhwck.controller.hwc;
 
 import com.hzhwck.controller.BaseController;
+import com.hzhwck.model.hwc.Samples;
 import com.hzhwck.model.hwc.User;
 import com.hzhwck.model.system.Account;
 import com.hzhwck.model.system.Role;
@@ -189,7 +190,12 @@ public class UserController extends BaseController {
         map.put("realName", user.get("realName"));
         map.put("areaLevel", user.get("areaLevel"));
         map.put("areaCode", user.get("areaCode"));
+        if(user.get("sampleId") != null){
+            map.put("sample", Samples.dao.findById(user.get("sampleId")));
+        }
         if(type == 2){
+            map.put("accountId", account.get("id"));
+            map.put("hwcUserId", user.get("id"));
             map.put("pwd", account.get("pwd"));
             Role role = Role.dao.findById(account.get("role"));
             map.put("role", role.toRecord().getColumns());
