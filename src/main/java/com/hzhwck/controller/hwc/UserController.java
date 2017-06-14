@@ -37,6 +37,7 @@ public class UserController extends BaseController {
         boolean success = Db.tx(new IAtom() {
             public boolean run() throws SQLException {
                 User user = new User();
+                user.set("type", 1);
                 user.set("realName", getPara("realName"));
                 user.set("areaCode", getPara("areaName"));
                 user.set("areaLevel", getPara("areaLevel"));

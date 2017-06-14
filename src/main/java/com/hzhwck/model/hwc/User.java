@@ -84,4 +84,8 @@ public class User extends Model<User> {
                 "u.realName as realName, u.areaLevel as areaLevel, u.areaCode as areaCode ", sb.toString());
     }
 
+    public static List<User> getAllUser(){
+        return User.dao.find("select * from " + tableName);
+    }
+
 }
