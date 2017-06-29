@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class TableGroups extends Model<TableGroups> {
     public static final TableGroups dao = new TableGroups().dao();
-    private static final String tableName = "hzhwc.hwc_tablegroups";
+    private static final String tableName = "hwc_tablegroups";
 
     public static List<TableGroups> getTableGroups(){
         return TableGroups.dao.find("select * from " + tableName );

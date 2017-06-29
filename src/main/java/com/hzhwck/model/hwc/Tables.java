@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Tables extends Model<Tables> {
     public static final Tables dao = new Tables().dao();
-    private static final String tableName = "hzhwc.hwc_tables";
+    private static final String tableName = "hwc_tables";
 
     public static List<Tables> getTables(){
         return Tables.dao.find("select * from " + tableName );
@@ -17,5 +17,9 @@ public class Tables extends Model<Tables> {
 
     public static List<Tables> getTablesByGroupId(String id){
         return Tables.dao.find("select * from " + tableName + " where groupId=" + id);
+    }
+
+    public static Tables getTableByTheno(String theNo){
+        return Tables.dao.findFirst("select * from " + tableName + " where theNo='" + theNo + "'");
     }
 }

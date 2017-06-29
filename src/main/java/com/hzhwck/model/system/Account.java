@@ -7,7 +7,7 @@ import com.jfinal.plugin.activerecord.Model;
  */
 public class Account extends Model<Account> {
     public static final Account dao = new Account().dao();
-    private static final String tableName = "hzhwc.sys_accounts";
+    private static final String tableName = "sys_accounts";
 
     public static Account add(Account account){
         if(account.save())  return account;
@@ -24,6 +24,6 @@ public class Account extends Model<Account> {
     }
 
     public static Account findByUserName(String userName){
-        return Account.dao.findFirst("select * from " + tableName + " where userName = " + userName);
+        return Account.dao.findFirst("select * from " + tableName + " where userName = '" + userName + "'");
     }
 }

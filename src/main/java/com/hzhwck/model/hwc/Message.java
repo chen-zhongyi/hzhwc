@@ -10,7 +10,7 @@ import java.util.List;
  * Created by 陈忠意 on 2017/6/12.
  */
 public class Message extends Model<Message> {
-    private static final String tableName = "hzhwc.hwc_messages";
+    private static final String tableName = "hwc_messages";
     public static final Message dao = new Message().dao();
     private static final String[] a = {"title", "content"};
 
@@ -23,7 +23,7 @@ public class Message extends Model<Message> {
                 if(t.length == 2){
                     for(int j = 0;j < a.length;++j){
                         if(t[0].equals(a[j])){
-                            f.add("temp");
+                            f.add(temp);
                         }
                     }
                 }

@@ -8,7 +8,7 @@ import java.util.List;
  * Created by 陈忠意 on 2017/6/8.
  */
 public class Rights extends Model<Rights> {
-    private static final String tableName = "hzhwc.sys_rights";
+    private static final String tableName = "sys_rights";
     public static Rights dao = new Rights().dao();
 
     public static List<Rights> getRights(){

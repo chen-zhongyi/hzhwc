@@ -7,7 +7,7 @@ import com.jfinal.plugin.activerecord.Model;
  */
 public class Menu extends Model<Menu> {
 
-    private static final String tableName = "hzhwc.sys_menu";
+    private static final String tableName = "sys_menu";
     public static Menu dao = new Menu().dao();
 
 }

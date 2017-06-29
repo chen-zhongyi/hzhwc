@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Role extends Model<Role> {
 
-    private static final String tableName = "hzhwc.sys_role";
+    private static final String tableName = "sys_role";
     public static Role dao = new Role().dao();
 
     public static List<Role> getRoles(){
