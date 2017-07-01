@@ -181,10 +181,27 @@ public class ReportController extends BaseController{
     public void modify(){
         String id = getPara(0);
         Reports report = Reports.dao.findById(id);
-        report.set("modifyAt", TimeUtil.getNowTime());
-        report.set("modifyBy", ((Map<String, Object>)getSessionAttr("user")).get("hwcUserId"));
+        //report.set("modifyAt", TimeUtil.getNowTime());
+        //report.set("modifyBy", ((Map<String, Object>)getSessionAttr("user")).get("hwcUserId"));
+        String status = getPara("status");
+        Map<String, Object> loginUser = getSessionAttr("user");
+        boolean flag = false;
+        if(loginUser.get("type").toString().equals(HwcUserType.admin) && status != null){
+            String areaCode = (String) loginUser.get("areaCode");
+            if(areaCode.equals("top")){
+                report.set("finalApproveComment", getPara("comment"));
+                report.set("finalApproveBy", loginUser.get("accountId"));
+                report.set("finalApproveAt", TimeUtil.getNowTime());
+            }else {
+                report.set("firstApproveComment", getPara("comment"));
+                report.set("firstApproveBy", loginUser.get("accountId"));
+                report.set("firstApproveAt", TimeUtil.getNowTime());
+            }
+            report.set("status", status);
+            flag = true;
+        }
 
-        if(report.update() == false){
+        if(flag && report.update() == false){
             if(getPara("callback") != null){
                 String json = JsonKit.toJson(ResponseUtil.setRes("01", "表报修改失败，数据库异常，请联系管理员", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
