@@ -326,7 +326,7 @@ public class UserController extends BaseController {
     public void getPageUsers(){
         int pageNumber = getParaToInt("pageNumber", 1);
         int pageSize = getParaToInt("pageSize", 20);
-        String oder = getPara("oder", "asc");
+        String order = getPara("order", "asc");
 
         //系统账号过滤
         String sa = TableNames.systemAccount.split(" ")[1] + ".";
@@ -361,7 +361,7 @@ public class UserController extends BaseController {
             filter += " and " + hu + "type = " + type + " ";
         }
 
-        Page<User> users = User.getPageUsers(pageNumber, pageSize, orderBy, oder, filter, ", " + TableNames.hwcSamples + ", " + TableNames.systemAccount);
+        Page<User> users = User.getPageUsers(pageNumber, pageSize, orderBy, order, filter, ", " + TableNames.hwcSamples + ", " + TableNames.systemAccount);
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("pageNumber", users.getPageNumber());
         data.put("pageSize", users.getPageSize());

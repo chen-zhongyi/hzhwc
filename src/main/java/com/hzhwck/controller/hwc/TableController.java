@@ -1,14 +1,14 @@
 package com.hzhwck.controller.hwc;
 
 import com.hzhwck.controller.BaseController;
-import com.hzhwck.model.hwc.Reports;
-import com.hzhwck.model.hwc.Table1;
-import com.hzhwck.model.hwc.Table2;
-import com.hzhwck.model.hwc.Table3;
+import com.hzhwck.model.hwc.*;
+import com.hzhwck.myEnum.HwcUserType;
+import com.hzhwck.myEnum.TableNames;
 import com.hzhwck.util.ResponseUtil;
 import com.hzhwck.util.TimeUtil;
 import com.jfinal.core.ActionKey;
 import com.jfinal.kit.JsonKit;
+import com.jfinal.plugin.activerecord.Page;
 
 import java.util.Map;
 
@@ -245,4 +245,102 @@ public class TableController extends BaseController{
         }
     }
 
+    /**
+     * 报表数据查询
+     */
+    @ActionKey("/api/hwc/tables/search")
+    public void getPage(){
+
+        int pageNumber = getParaToInt("pageNumber", 1);
+        int pageSize = getParaToInt("pageSize", 20);
+        String order = getPara("order", "asc");
+        String orderBy = getPara("orderBy");
+
+        String filter = "";
+        String hr = TableNames.hwcReports.split(" ")[1] + ".";
+        String hs = TableNames.hwcSamples.split(" ")[1] + ".";
+        filter = " where " + hr + "sampleId = " + hs + "id ";
+        String tableId = getPara("tableId");
+        Map<String, Object> loginUser = getSessionAttr("user");
+        if(loginUser.get("type").toString().equals(HwcUserType.sample)){
+            Samples sample = (Samples) loginUser.get("sample");
+            String sampleId = sample == null ? "-1" : sample.get("id").toString();
+            if(filter.equals(""))   filter = " where " + hr + "sampleId = " + sampleId + " ";
+            else
+                filter += " and " + hr + "sampleId = " + sampleId + " " ;
+        }else {
+            String ssqx = getPara("ssqx");
+            if(ssqx != null){
+                if(filter.equals(""))   filter = " where " + hs + "ssqx = '" + ssqx + "' ";
+                else
+                    filter += " and " + hs + "ssqx = '" + ssqx + "' ";
+            }
+            String jsdwmc = getPara("jsdwmc");
+            if(jsdwmc != null){
+                if(filter.equals(""))   filter = " where " + hs + "jsdwmc like '%" + jsdwmc + "%' ";
+                else
+                    filter += " and " + hs + "jsdwmc like '%" + jsdwmc + "%' ";
+            }
+        }
+        //status
+        if(filter.equals(""))
+            filter = " where " + hr + "status = 4 ";
+        else
+            filter += " and " + hr + "status = 4 ";
+        if(tableId.equals("1")){
+            String ht1 = TableNames.hwcTable1.split(" ")[1] + ".";
+            if(filter.equals(""))   filter = " where " + hr + "tableId = 1 and " + hr + "tableReportId = " + ht1 + "id ";
+            else
+                filter += " and " + hr + "tableId = 1 and " + hr + "tableReportId = " + ht1 + "id ";
+            Page<Table1> tables = Table1.getPage(pageNumber, pageSize, orderBy, order, filter, TableNames.hwcReports + ", " + TableNames.hwcTable1 + ", " + TableNames.hwcSamples);
+            for(Table1 table : tables.getList()){
+                table.put("sample", Samples.dao.findById(table.get("sampleId")));
+                if(table.get("warehouseId") != null){
+                    table.put("warehouse", Warehouses.dao.findById(table.get("warehouseId")));
+                }
+            }
+            if(getPara("callback") != null){
+                String json = JsonKit.toJson(ResponseUtil.setRes("00", "报表数据查询", tables));
+                renderJson(getPara("callback", "default") + "(" + json + ")");
+            }else {
+                renderJson(ResponseUtil.setRes("00", "报表数据查询", tables));
+            }
+        }else if(tableId.equals("2")){
+            String ht2 = TableNames.hwcTable2.split(" ")[1] + ".";
+            if(filter.equals(""))   filter = " where " + hr + "tableId = 2 and " + hr + "tableReportId = " + ht2 + "id ";
+            else
+                filter += " and " + hr + "tableId = 2 and " + hr + "tableReportId = " + ht2 + "id ";
+            Page<Table2> tables = Table2.getPage(pageNumber, pageSize, orderBy, order, filter, TableNames.hwcReports + ", " + TableNames.hwcTable2 + ", " + TableNames.hwcSamples);
+            for(Table2 table : tables.getList()){
+                table.put("sample", Samples.dao.findById(table.get("sampleId")));
+                if(table.get("warehouseId") != null){
+                    table.put("warehouse", Warehouses.dao.findById(table.get("warehouseId")));
+                }
+            }
+            if(getPara("callback") != null){
+                String json = JsonKit.toJson(ResponseUtil.setRes("00", "报表数据查询", tables));
+                renderJson(getPara("callback", "default") + "(" + json + ")");
+            }else {
+                renderJson(ResponseUtil.setRes("00", "报表数据查询", tables));
+            }
+        }else if(tableId.equals("3")){
+            String ht3 = TableNames.hwcTable3.split(" ")[1] + ".";
+            if(filter.equals(""))   filter = " where " + hr + "tableId = 3 and " + hr + "tableReportId = " + ht3 + "id ";
+            else
+                filter += " and " + hr + "tableId = 3 and " + hr + "tableReportId = " + ht3 + "id ";
+            Page<Table3> tables = Table3.getPage(pageNumber, pageSize, orderBy, order, filter, TableNames.hwcReports + ", " + TableNames.hwcTable3 + ", " + TableNames.hwcSamples);
+            for(Table3 table : tables.getList()){
+                table.put("sample", Samples.dao.findById(table.get("sampleId")));
+                if(table.get("warehouseId") != null){
+                    table.put("warehouse", Warehouses.dao.findById(table.get("warehouseId")));
+                }
+            }
+            if(getPara("callback") != null){
+                String json = JsonKit.toJson(ResponseUtil.setRes("00", "报表数据查询", tables));
+                renderJson(getPara("callback", "default") + "(" + json + ")");
+            }else {
+                renderJson(ResponseUtil.setRes("00", "报表数据查询", tables));
+            }
+        }
+    }
 }
