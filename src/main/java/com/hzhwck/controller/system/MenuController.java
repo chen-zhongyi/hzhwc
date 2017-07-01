@@ -2,6 +2,7 @@ package com.hzhwck.controller.system;
 
 import com.hzhwck.controller.BaseController;
 import com.hzhwck.model.system.Menu;
+import com.hzhwck.model.system.Role;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.aop.Before;
 import com.jfinal.core.ActionKey;
@@ -64,9 +65,15 @@ public class MenuController extends BaseController{
     @ActionKey("/api/system/menus/search")
     public void getMenus(){
         Map<String, Object> user = (Map<String, Object>)getSessionAttr("user");
-        Map<String, Object> role = (Map<String, Object>)user.get("role");
+        Map<String, Object> tx = (Map<String, Object>)user.get("role");
+        Role role = Role.dao.findById(tx.get("id"));
         if(((Integer)role.get("status")) == 0){
-            renderJson(ResponseUtil.setRes("03", "该用户角色已经停用，请联系管理员", role));
+            if(getPara("callback") != null){
+                String json = JsonKit.toJson(ResponseUtil.setRes("03", "该用户角色已经停用，请联系管理员", role));
+                renderJson(getPara("callback", "default") + "(" + json + ")");
+            }else {
+                renderJson(ResponseUtil.setRes("03", "该用户角色已经停用，请联系管理员", role));
+            }
             return ;
         }
         String[] menus = ((String)role.get("resou")).split(",");
