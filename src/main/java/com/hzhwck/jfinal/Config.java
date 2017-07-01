@@ -49,12 +49,15 @@ public class Config extends JFinalConfig {
         me.add("/api/hwc/servicecompanys", ServiceCompanysController.class);
         me.add("/api/hwc/tablecols", TableColsController.class);
         me.add("/api/hwc/tablegroups", TableGroupsController.class);
-        //me.add("/api/hwc/tables", TablesController.class);
+        me.add("/api/hwc/table", TablesController.class);
         me.add("/api/hwc/warehouse", WarehousesController.class);
         me.add("/api/hwc/areas", AreaController.class);
         me.add("/api/hwc/tables", TableController.class);
         me.add("/api/hwc/images", ImageController.class);
         me.add("/api/hwc/getreports", GetReports.class);
+        me.add("/api/hwc/countrys", CountryController.class);
+        me.add("/api/hwc/contients", ContientController.class);
+        me.add("/api/hwc/yuanqus", YuanquController.class);
     }
     public void configEngine(Engine me) {}
     public void configPlugin(Plugins me) {
@@ -89,6 +92,9 @@ public class Config extends JFinalConfig {
         arp.addMapping("hwc_tables", Tables.class);
         arp.addMapping("hwc_tablegroups", TableGroups.class);
         arp.addMapping("hwc_areas", Area.class);
+        arp.addMapping("hwc_countrys", Country.class);
+        arp.addMapping("hwc_continents", Contient.class);
+        arp.addMapping("hwc_yuanqu", Yuanqu.class);
     }
     public void configInterceptor(Interceptors me) {
         me.addGlobalActionInterceptor(new LoggerGlobalInterceptor());

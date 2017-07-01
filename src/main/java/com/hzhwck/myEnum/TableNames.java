@@ -30,4 +30,10 @@ public class TableNames {
     public static final String systemMenus = "sys_menus sm";
 
     public static final String systemRoles = "sys_roles sr";
+
+    public static final String hwcCountry = "hwc_countrys hc";
+
+    public static final String hwcContient = "hwc_continents hcon";
+
+    public static final String hwcYuanqu = "hwc_yuanqu hy";
 }

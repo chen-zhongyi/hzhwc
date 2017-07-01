@@ -3,10 +3,13 @@ package com.hzhwck.controller.hwc;
 import com.hzhwck.controller.BaseController;
 import com.hzhwck.interceptor.LoginInterceptor;
 import com.hzhwck.model.hwc.Area;
+import com.hzhwck.model.hwc.Yuanqu;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.aop.Clear;
 import com.jfinal.core.ActionKey;
 import com.jfinal.kit.JsonKit;
+
+import java.util.List;
 
 /**
  * Created by 陈忠意 on 2017/6/17.
@@ -60,11 +63,15 @@ public class AreaController extends BaseController{
      */
     @ActionKey("/api/hwc/areas/search")
     public void getArea(){
+        List<Area> data = Area.getAreas();
+        for(Area area : data){
+            area.put("yuanqu", Yuanqu.getYuanquByAreaCode(area.getStr("code")));
+        }
         if(getPara("callback") != null){
-            String json = JsonKit.toJson(ResponseUtil.setRes("00", "获取海外仓区域", Area.getAreas()));
+            String json = JsonKit.toJson(ResponseUtil.setRes("00", "获取海外仓区域", data));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         }else {
-            renderJson(ResponseUtil.setRes("00", "获取海外仓区域", Area.getAreas()));
+            renderJson(ResponseUtil.setRes("00", "获取海外仓区域", data));
         }
     }
 }
