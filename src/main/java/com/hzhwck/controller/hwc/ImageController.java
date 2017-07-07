@@ -70,12 +70,12 @@ public class ImageController extends BaseController{
         String imageName = image.getFileName();
         String suffix = imageName.substring(imageName.lastIndexOf('.')).toLowerCase();
         File tempFile = new File(image.getUploadPath() + File.separator + image.getFileName());
-        if(!(suffix.equals(".jpg") || suffix.equals(".png") || suffix.equals(".jpeg") || suffix.equals(".svg"))){
+        if(!(suffix.equals(".jpg") || suffix.equals(".png") || suffix.equals(".jpeg") || suffix.equals(".svg") || suffix.equals(".gif"))){
             if(getPara("callback") != null){
-                String json = JsonKit.toJson(ResponseUtil.setRes("06", "文件上传出错,只支持.jpg .png .jpeg .svg格式图片", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes("06", "文件上传出错,只支持.jpg .png .jpeg .svg .gif格式图片", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             }else {
-                renderJson(ResponseUtil.setRes("06", "文件上传出错,只支持.jpg .png .jpeg .svg格式图片", null));
+                renderJson(ResponseUtil.setRes("06", "文件上传出错,只支持.jpg .png .jpeg .svg .gif格式图片", null));
             }
             tempFile.delete();
             return;

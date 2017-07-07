@@ -1,9 +1,11 @@
 package com.hzhwck.controller.hwc;
 
 import com.hzhwck.controller.BaseController;
+import com.hzhwck.interceptor.LoginInterceptor;
 import com.hzhwck.model.hwc.Contient;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.aop.Before;
+import com.jfinal.aop.Clear;
 import com.jfinal.core.ActionKey;
 import com.jfinal.ext.interceptor.GET;
 import com.jfinal.kit.JsonKit;
@@ -13,6 +15,7 @@ import java.util.List;
 /**
  * Created by 陈忠意 on 2017/7/1.
  */
+@Clear(LoginInterceptor.class)
 public class ContientController extends BaseController{
 
     /**

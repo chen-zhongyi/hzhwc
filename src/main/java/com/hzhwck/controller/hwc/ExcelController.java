@@ -33,6 +33,49 @@ import java.util.Map;
 public class ExcelController extends BaseController{
     private static final int N = 7;
 
+    @ActionKey("/api/hwc/excel")
+    public void test(){
+        boolean success = false;
+        if(getRequest().getMethod().equals("POST")){
+            System.out.println("[POST] add");
+            forwardAction("/api/hwc/excel/in");
+            success = true;
+        }else if(getRequest().getMethod().equals("GET")){
+            String id = getPara(0);
+            if(id != null){
+                System.out.println("[GET] show id -- " + id);
+                //forwardAction("/api/hwc/excel/id/" + id);
+                //success = true;
+            }else {
+                System.out.println("[GET] show list");
+                forwardAction("/api/hwc/excel/out");
+                success = true;
+            }
+        }else if(getRequest().getMethod().equals("PUT")){
+            String id = getPara(0);
+            if(id != null){
+                System.out.println("[PUT] update id -- " + id);
+                //forwardAction("/api/hwc/excel/modify/" + id);
+                //success = true;
+            }
+        }else if(getRequest().getMethod().equals("DELETE")){
+            String userName = getPara(0);
+            if(userName != null){
+                System.out.println("[DELETE] userName -- " + userName);
+                //forwardAction("/api/hwc/excel/delete/" + userName);
+                //success = true;
+            }
+        }
+        if(success == false){
+            if(getPara("callback") != null) {
+                String json = JsonKit.toJson(ResponseUtil.setRes("02", "url出错或者请求方法出错", null));
+                renderJson(getPara("callback", "default") + "(" + json + ")");
+            } else {
+                renderJson(ResponseUtil.setRes("02", "url出错或者请求方法出错", null));
+            }
+        }
+    }
+
     /**
      * 通过Excel导入海外仓服务企业信息
      */
@@ -65,8 +108,9 @@ public class ExcelController extends BaseController{
             }
             return ;
         }
+        Workbook wb = null;
         try {
-            Workbook wb = WorkbookFactory.create(excel.getFile());
+            wb = WorkbookFactory.create(excel.getFile());
             for(Sheet sheet : wb){
                 int st = Math.min(20, sheet.getFirstRowNum());
                 int end = Math.max(200, sheet.getLastRowNum());
@@ -113,7 +157,7 @@ public class ExcelController extends BaseController{
                             break;
                         }
                         if(j == 5){
-                            String date = cell.getStringCellValue();
+                            String date = cell.getStringCellValue().trim();
                             System.out.println("date --> " + date);
                             SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
                             sf.setLenient(false);
@@ -126,7 +170,7 @@ public class ExcelController extends BaseController{
                                 break;
                             }
                         }else {
-                            data[j] = cell.getStringCellValue();
+                            data[j] = cell.getStringCellValue().trim();
                         }
                     }
                     if(success){
@@ -162,9 +206,18 @@ public class ExcelController extends BaseController{
             e.printStackTrace();
         }catch (Exception e){
             e.printStackTrace();
+        }finally {
+            try {
+                wb.close();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+            if(excel.getFile().delete() == false){
+                System.out.println("delete excel fail !");
+            }else {
+                System.out.println("delete excel success !");
+            }
         }
-        //excel.getFile().delete();
-        excel.getFile().deleteOnExit();
     }
 
     /**

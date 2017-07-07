@@ -2,7 +2,7 @@ package com.hzhwck.controller.system;
 
 import com.hzhwck.controller.BaseController;
 import com.hzhwck.model.system.Menu;
-import com.hzhwck.model.system.Role;
+import com.hzhwck.myEnum.HwcUserType;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.aop.Before;
 import com.jfinal.core.ActionKey;
@@ -64,25 +64,13 @@ public class MenuController extends BaseController{
     @Before(GET.class)
     @ActionKey("/api/system/menus/search")
     public void getMenus(){
-        Map<String, Object> user = (Map<String, Object>)getSessionAttr("user");
-        Map<String, Object> tx = (Map<String, Object>)user.get("role");
-        Role role = Role.dao.findById(tx.get("id"));
-        if(((Integer)role.get("status")) == 0){
-            if(getPara("callback") != null){
-                String json = JsonKit.toJson(ResponseUtil.setRes("03", "该用户角色已经停用，请联系管理员", role));
-                renderJson(getPara("callback", "default") + "(" + json + ")");
-            }else {
-                renderJson(ResponseUtil.setRes("03", "该用户角色已经停用，请联系管理员", role));
-            }
-            return ;
+        Map<String, Object> loginUser = (Map<String, Object>)getSessionAttr("user");
+        List<Menu> ms = null;
+        if(loginUser.get("type").toString().equals(HwcUserType.sample)){
+            ms = Menu.getSampleMenus();
         }
-        String[] menus = ((String)role.get("resou")).split(",");
-        List<Menu> ms = new LinkedList<Menu>();
-        for(int i = 0;i < menus.length;++i){
-            Menu m = Menu.dao.findById(menus[i].split(":")[0]);
-            if(m.getInt("status") == 0) continue;
-            ms.add(m);
-        }
+        else
+            ms = Menu.getUserMenus(loginUser.get("id").toString());
         Map<String, Object> res = new HashMap<String, Object>();
         res.put("id", 0);
         res.put("name", "根节点");

@@ -14,12 +14,14 @@ import java.util.Map;
  */
 public class LoggerGlobalInterceptor implements Interceptor{
     private static Logger log = Logger.getLogger(LoggerGlobalInterceptor.class);
+    private static final int N = 1004;
 
     public void intercept(Invocation inv){
         Controller c = inv.getController();
         log.info("Controller --> " + inv.getController().toString());
         log.info("ActionKey --> " + inv.getActionKey());
         log.info("Method --> " + inv.getMethodName());
+        c.getRequest().getParameterMap();
         Map<String, String[]> map = c.getParaMap();
         StringBuffer sb = new StringBuffer("Parameter --> ");
         for(String temp : map.keySet()){

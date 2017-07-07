@@ -3,6 +3,7 @@ package com.hzhwck.controller.hwc;
 import com.hzhwck.controller.BaseController;
 import com.hzhwck.model.hwc.*;
 import com.hzhwck.model.system.Account;
+import com.hzhwck.myEnum.CodeType;
 import com.hzhwck.myEnum.HwcUserType;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.core.ActionKey;
@@ -25,7 +26,8 @@ public class WarehousesController extends BaseController{
         boolean success = false;
         if(getRequest().getMethod().equals("POST")){
             System.out.println("[POST] add");
-            forwardAction("/api/hwc/warehouses/add");
+            //forwardAction("/api/hwc/warehouses/add");
+            redirect("/api/hwc/warehouses/add" + "?" + getParam());
             success = true;
         }else if(getRequest().getMethod().equals("GET")){
             String id = getPara(0);
@@ -42,7 +44,8 @@ public class WarehousesController extends BaseController{
             String id = getPara(0);
             if(id != null){
                 System.out.println("[PUT] update id -- " + id);
-                forwardAction("/api/hwc/warehouses/modify/" + id);
+                //forwardAction("/api/hwc/warehouses/modify/" + id);
+                redirect("/api/hwc/warehouses/modify/" + id + "?" + getParam());
                 success = true;
             }
         }else if(getRequest().getMethod().equals("DELETE")){
@@ -55,10 +58,10 @@ public class WarehousesController extends BaseController{
         }
         if(success == false){
             if(getPara("callback") != null){
-                String json = JsonKit.toJson(ResponseUtil.setRes("02", "url出错或者请求方法出错", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "url出错或者请求方法出错", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             }else {
-                renderJson(ResponseUtil.setRes("02", "url出错或者请求方法出错", null));
+                renderJson(ResponseUtil.setRes(CodeType.paramError, "url出错或者请求方法出错", null));
             }
         }
     }
@@ -74,10 +77,10 @@ public class WarehousesController extends BaseController{
         warehouses.set("sampleId", user.get("sampleId"));
         if(warehouses.save() == false){
             if(getPara("callback") != null){
-                String json = JsonKit.toJson(ResponseUtil.setRes("01", "添加海外仓库失败，数据库异常", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.dataBaseError, "添加海外仓库失败，数据库异常", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             }else {
-                renderJson(ResponseUtil.setRes("01", "添加海外仓库失败，数据库异常", null));
+                renderJson(ResponseUtil.setRes(CodeType.dataBaseError, "添加海外仓库失败，数据库异常", null));
             }
             return ;
         }
@@ -89,10 +92,10 @@ public class WarehousesController extends BaseController{
         loginUser.put("warehouseIds", user.get("warehouseIds"));
         if(User.modify(user) == null){
             if(getPara("callback") != null){
-                String json = JsonKit.toJson(ResponseUtil.setRes("01", "添加海外仓库失败，数据库异常", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.dataBaseError, "添加海外仓库失败，数据库异常", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             }else {
-                renderJson(ResponseUtil.setRes("01", "添加海外仓库失败，数据库异常", null));
+                renderJson(ResponseUtil.setRes(CodeType.dataBaseError, "添加海外仓库失败，数据库异常", null));
             }
             warehouses.delete();
             return ;
@@ -117,10 +120,10 @@ public class WarehousesController extends BaseController{
         warehouses.set("id", id);
         if(warehouses.update() == false){
             if(getPara("callback") != null){
-                String json = JsonKit.toJson(ResponseUtil.setRes("01", "修改海外仓库失败，数据库异常", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.dataBaseError, "修改海外仓库失败，数据库异常", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             }else {
-                renderJson(ResponseUtil.setRes("01", "修改海外仓库失败，数据库异常", null));
+                renderJson(ResponseUtil.setRes(CodeType.dataBaseError, "修改海外仓库失败，数据库异常", null));
             }
             return ;
         }
@@ -143,8 +146,10 @@ public class WarehousesController extends BaseController{
                 String id = getPara(0);
                 Warehouses warehouse = Warehouses.dao.findById(id);
                 String serviceCompanyIds = warehouse.getStr("serviceCompanyIds");
-                for(String serviceCompanyId : serviceCompanyIds.split(",")){
-                    if(ServiceCompanys.dao.deleteById(serviceCompanyId) == false)   return false;
+                if(serviceCompanyIds != null) {
+                    for (String serviceCompanyId : serviceCompanyIds.split(",")) {
+                        if (ServiceCompanys.dao.deleteById(serviceCompanyId) == false) return false;
+                    }
                 }
                 List<Reports> reports = Reports.findByWarehouseId(id);
                 for(Reports report : reports){
@@ -170,18 +175,18 @@ public class WarehousesController extends BaseController{
         });
         if(success == false){
             if(getPara("callback") != null){
-                String json = JsonKit.toJson(ResponseUtil.setRes("01", "删除海外仓失败，数据库异常", null));
-                renderJson(getPara("callback", "default") + "(" + json + ")");
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.dataBaseError, "删除海外仓失败，数据库异常", null));
+                renderJson(getPara(CodeType.dataBaseError, "default") + "(" + json + ")");
             }else {
                 renderJson(ResponseUtil.setRes("01", "删除海外仓失败，数据库异常", null));
             }
             return ;
         }else {
             if(getPara("callback") != null){
-                String json = JsonKit.toJson(ResponseUtil.setRes("01", "删除海外仓成功", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "删除海外仓成功", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             }else {
-                renderJson(ResponseUtil.setRes("01", "删除海外仓成功", null));
+                renderJson(ResponseUtil.setRes(CodeType.success, "删除海外仓成功", null));
             }
         }
     }
@@ -227,16 +232,17 @@ public class WarehousesController extends BaseController{
             Account account = Account.dao.findById(accountId);
             User user = User.dao.findById(account.getStr("user").split(":")[1]);
             warehouseIds = user.getStr("warehouseIds") == null ? "-1" : user.getStr("warehouseIds");
+            warehouseIds = warehouseIds.equals("") ? "-1" : warehouseIds;
         }
         Page<Warehouses> data = Warehouses.getPage(pageNumber, pageSize, oderBy, oder, filter, warehouseIds);
         for(Warehouses w : data.getList()){
             w.put("sample", Samples.dao.findById(w.get("sampleId")));
         }
         if(getPara("callback") != null){
-            String json = JsonKit.toJson(ResponseUtil.setRes("00", "获取海外仓库信息成功", data));
+            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "获取海外仓库信息成功", data));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         }else {
-            renderJson(ResponseUtil.setRes("00", "获取海外仓库信息成功", data));
+            renderJson(ResponseUtil.setRes(CodeType.success, "获取海外仓库信息成功", data));
         }
     }
 
@@ -247,10 +253,10 @@ public class WarehousesController extends BaseController{
     public void getWarehouseById(){
         String id = getPara(0);
         if(getPara("callback") != null){
-            String json = JsonKit.toJson(ResponseUtil.setRes("00", "根据id获取海外仓库信息成功", Warehouses.dao.findById(id)));
+            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "根据id获取海外仓库信息成功", Warehouses.dao.findById(id)));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         }else {
-            renderJson(ResponseUtil.setRes("00", "根据id获取海外仓库信息成功", Warehouses.dao.findById(id)));
+            renderJson(ResponseUtil.setRes(CodeType.success, "根据id获取海外仓库信息成功", Warehouses.dao.findById(id)));
         }
     }
 }

@@ -1,0 +1,46 @@
+
+--samples register
+----[API]        /api/hwc/register
+----[POST]       param userName, pwd, realName
+
+--user manager
+----[API]        /api/hwc/users
+----[POST]       param userName, pwd, realName, areaCode
+----[PUT]        param userName, realName, areaCode, status(0:禁用,1:正常)
+----[get]  -id
+           -list param userName(not required), realName(not required), areaCode(not required), status(not required), type(not required, 0:市级管理员, 1:区县管理员, 2:企业用户), pageNumber(not required, default:1), pageSize(not required, default:20)
+
+--menus manager
+----[API]        /api/system/menus
+----[GET]  -list
+
+--right manager
+----[API]        /api/system/rights
+----[GET]  -list
+
+--usersystem manager
+----[API]        /api/system/usersystems
+----[POST]       param userId, system(example: reports:edit,plans:edit,samples:edit,warehouses:edit,datas:nothing,cameras:nothing)
+----[PUT]        param userId, system
+----[GET]  -list param userId
+
+--system manager
+----[API]        /api/hwc/systems
+----[GET]  -list
+
+-----------------------------new
+--image manager
+----[API]        /api/hwc/images
+----[POST]       param image
+
+--servicecompanys manager
+----[API]        /api/hwc/servicecompanys
+----[POST]       param servicecompany.qymc servicecompany.qyjs servicecompany.hwlx servicecompany.warehouseId servicecompany.lxr servicecompany.dz servicecompany.htjzsj
+----[PUT]        param 同上
+----[GET]  -id
+           -list param warehouseId, userId, sampleId, pageNumber, pageSize
+
+--excel in manager
+----[API]        /api/hwc/excel
+----[POST]
+----[GET]  -list

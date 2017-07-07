@@ -123,6 +123,7 @@ public class ReportController extends BaseController{
         for(Reports report : reports.getList()){
             report.put("table", Tables.dao.findById(report.get("tableId")));
             report.put("sample", Samples.dao.findById(report.get("sampleId")));
+            report.put("plan", ReportPlans.getReportPlansAndTableGroupsById(report.get("planId").toString()));
             if(report.get("warehouseId") == null)   continue;
             report.put("warehouse", Warehouses.dao.findById(report.get("warehouseId")));
         }

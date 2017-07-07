@@ -1,5 +1,6 @@
-package com.hzhwck.validator.hwc;
+package com.hzhwck.validator.system;
 
+import com.hzhwck.model.system.Account;
 import com.hzhwck.myEnum.CodeType;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.core.Controller;
@@ -10,12 +11,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by 陈忠意 on 2017/6/14.
+ * Created by 陈忠意 on 2017/7/3.
  */
-public class TableColsValidator extends Validator{
+public class UserSystemValidator extends Validator{
+
     protected void validate(Controller c){
-        if(getActionKey().equals("/api/hwc/tablecols")){
-            validateInteger("tableId", 1, 3, "tableId", "tableId只能取{1,2,3}" );
+        validateRequiredString("userId", "userId", "用户名必须");
+        String userId = c.getPara("userId");
+        if(userId != null){
+            if(Account.dao.findById(userId) == null){
+                addError("userId", "用户名不存在");
+            }
         }
     }
 

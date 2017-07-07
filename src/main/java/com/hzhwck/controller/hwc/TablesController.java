@@ -1,9 +1,11 @@
 package com.hzhwck.controller.hwc;
 
 import com.hzhwck.controller.BaseController;
+import com.hzhwck.interceptor.LoginInterceptor;
 import com.hzhwck.model.hwc.Tables;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.aop.Before;
+import com.jfinal.aop.Clear;
 import com.jfinal.core.ActionKey;
 import com.jfinal.ext.interceptor.GET;
 import com.jfinal.kit.JsonKit;
@@ -11,6 +13,7 @@ import com.jfinal.kit.JsonKit;
 /**
  * Created by 陈忠意 on 2017/6/14.
  */
+@Clear(LoginInterceptor.class)
 public class TablesController extends BaseController{
 
 

@@ -1,5 +1,6 @@
 package com.hzhwck.model.hwc;
 
+import com.hzhwck.myEnum.TableNames;
 import com.jfinal.plugin.activerecord.Model;
 
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
  */
 public class Area extends Model<Area> {
     public static final Area dao = new Area().dao();
-    private static final String tableName = "hwc_areas";
+    private static final String tableName = TableNames.hwcAreas.split(" ")[0];
 
     public static List<Area> getAreas(){
         return Area.dao.find("select * from " + tableName);

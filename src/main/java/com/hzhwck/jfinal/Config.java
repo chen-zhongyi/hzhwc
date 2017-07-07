@@ -5,15 +5,12 @@ import com.hzhwck.controller.MessageController;
 import com.hzhwck.controller.hwc.*;
 import com.hzhwck.controller.system.MenuController;
 import com.hzhwck.controller.system.RightsController;
-import com.hzhwck.controller.system.RoleController;
+import com.hzhwck.controller.system.UserSystemController;
 import com.hzhwck.interceptor.CrossGlobleInterceptor;
 import com.hzhwck.interceptor.LoggerGlobalInterceptor;
 import com.hzhwck.interceptor.LoginInterceptor;
 import com.hzhwck.model.hwc.*;
-import com.hzhwck.model.system.Account;
-import com.hzhwck.model.system.Menu;
-import com.hzhwck.model.system.Rights;
-import com.hzhwck.model.system.Role;
+import com.hzhwck.model.system.*;
 import com.jfinal.config.*;
 import com.jfinal.kit.Prop;
 import com.jfinal.kit.PropKit;
@@ -38,7 +35,8 @@ public class Config extends JFinalConfig {
         //system
         me.add("/api/system/rights", RightsController.class);
         me.add("/api/system/menu", MenuController.class);
-        me.add("/api/system/role", RoleController.class);
+        //me.add("/api/system/role", RoleController.class);
+        me.add("/api/system/usersystems", UserSystemController.class);
 
         //hwc
         me.add("/api/hwc/users", UserController.class);
@@ -58,6 +56,9 @@ public class Config extends JFinalConfig {
         me.add("/api/hwc/countrys", CountryController.class);
         me.add("/api/hwc/contients", ContientController.class);
         me.add("/api/hwc/yuanqus", YuanquController.class);
+        me.add("/api/hwc/excel", ExcelController.class);
+        me.add("/api/hwc/register", RegisterLoginController.class);
+        me.add("/api/hwc/systems", SystemsController.class);
     }
     public void configEngine(Engine me) {}
     public void configPlugin(Plugins me) {
@@ -75,7 +76,8 @@ public class Config extends JFinalConfig {
         arp.addMapping("sys_accounts", Account.class);
         arp.addMapping("sys_rights", Rights.class);
         arp.addMapping("sys_menu", Menu.class);
-        arp.addMapping("sys_role", Role.class);
+        //arp.addMapping("sys_role", Role.class);
+        arp.addMapping("sys_usersystems", UserSystem.class);
 
         //hwc
         arp.addMapping("hwc_users", User.class);
@@ -95,6 +97,7 @@ public class Config extends JFinalConfig {
         arp.addMapping("hwc_countrys", Country.class);
         arp.addMapping("hwc_continents", Contient.class);
         arp.addMapping("hwc_yuanqu", Yuanqu.class);
+        arp.addMapping("hwc_system", Systems.class);
     }
     public void configInterceptor(Interceptors me) {
         me.addGlobalActionInterceptor(new LoggerGlobalInterceptor());

@@ -19,9 +19,12 @@ public class SamplesController extends BaseController {
     public void test(){
         boolean success = false;
         if(getRequest().getMethod().equals("POST")){
-            System.out.println("[POST] add");
-            forwardAction("/api/hwc/samples/add");
-            success = true;
+            if(getPara(0) == null) {
+                System.out.println("[POST] add");
+                //forwardAction("/api/hwc/samples/add");
+                redirect("/api/hwc/samples/add" + "?" + getParam());
+                success = true;
+            }
         }else if(getRequest().getMethod().equals("GET")){
             String id = getPara(0);
             if(id != null){
@@ -37,7 +40,8 @@ public class SamplesController extends BaseController {
             String id = getPara(0);
             if(id != null){
                 System.out.println("[PUT] update id -- " + id);
-                forwardAction("/api/hwc/samples/modify/" + id);
+                //forwardAction("/api/hwc/samples/modify/" + id);
+                redirect("/api/hwc/samples/modify/" + id + "?" + getParam());
                 success = true;
             }
         }else if(getRequest().getMethod().equals("DELETE")){
@@ -102,8 +106,6 @@ public class SamplesController extends BaseController {
     public void modify(){
         Map<String, Object> loginUser = getSessionAttr("user");
         Samples samples = getModel(Samples.class, "sample");
-        //String id = ((Samples)loginUser.get("sample")).get("id").toString();
-        //samples.set("id", id);
         samples.set("id", getPara(0));
         if(samples.update() == false){
             if(getPara("callback") != null){
@@ -114,12 +116,13 @@ public class SamplesController extends BaseController {
             }
             return ;
         }
-        loginUser.put("sample", samples.toRecord().getColumns());
+        Samples s = Samples.dao.findById(samples.get("id"));
+        loginUser.put("sample", s);
         if(getPara("callback") != null){
-            String json = JsonKit.toJson(ResponseUtil.setRes("00", "修改海外仓样本企业成功", Samples.dao.findById(samples.get("id"))));
+            String json = JsonKit.toJson(ResponseUtil.setRes("00", "修改海外仓样本企业成功", s));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         }else {
-            renderJson(ResponseUtil.setRes("00", "修改海外仓样本企业成功", Samples.dao.findById(samples.get("id"))));
+            renderJson(ResponseUtil.setRes("00", "修改海外仓样本企业成功", s));
         }
     }
 

@@ -2,11 +2,12 @@ package com.hzhwck.controller.hwc;
 
 import com.hzhwck.controller.BaseController;
 import com.hzhwck.interceptor.LoginInterceptor;
-import com.hzhwck.model.hwc.Samples;
+import com.hzhwck.model.hwc.Area;
 import com.hzhwck.model.hwc.User;
 import com.hzhwck.model.system.Account;
-import com.hzhwck.model.system.Role;
+import com.hzhwck.myEnum.CodeType;
 import com.hzhwck.myEnum.HwcUserType;
+import com.hzhwck.myEnum.Status;
 import com.hzhwck.myEnum.TableNames;
 import com.hzhwck.util.ResponseUtil;
 import com.hzhwck.util.TimeUtil;
@@ -55,7 +56,7 @@ public class UserController extends BaseController {
             String id = getPara(0);
             if(id != null){
                 System.out.println("[PUT] update id -- " + id);
-                forwardAction("/api/hwc/users/modify/" + id);
+                redirect("/api/hwc/users/modify/" + id + "?" + getParam());
                 success = true;
             }
         }else if(getRequest().getMethod().equals("DELETE")){
@@ -68,10 +69,56 @@ public class UserController extends BaseController {
         }
         if(success == false){
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("02", "url出错或者请求方法出错", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "url出错或者请求方法出错", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("02", "url出错或者请求方法出错", null));
+                renderJson(ResponseUtil.setRes(CodeType.paramError, "url出错或者请求方法出错", null));
+            }
+        }
+    }
+
+    /**
+     * 企业用户修改密码
+     */
+    @ActionKey("/api/hwc/users/pwdmodify")
+    public void chancePwd(){
+        if(!getRequest().getMethod().equals("POST")){
+            if(getPara("callback") != null) {
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "url出错或者请求方法出错", null));
+                renderJson(getPara("callback", "default") + "(" + json + ")");
+            } else {
+                renderJson(ResponseUtil.setRes(CodeType.paramError, "url出错或者请求方法出错", null));
+            }
+            return ;
+        }
+        String oldPwd = getPara("oldPwd");
+        String pwd = getPara("pwd");
+        Map<String, Object> loginUser = getSessionAttr("user");
+        if(loginUser.get("pwd").toString().equals(oldPwd)){
+            Account account = Account.dao.findById(loginUser.get("id"));
+            account.set("pwd", pwd);
+            if(account.update() == false){
+                if(getPara("callback") != null) {
+                    String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.dataBaseError, "修改密码失败，数据库异常", null));
+                    renderJson(getPara("callback", "default") + "(" + json + ")");
+                } else {
+                    renderJson(ResponseUtil.setRes(CodeType.dataBaseError, "修改密码失败，数据库异常", null));
+                }
+            }else {
+                loginUser.put("pwd", pwd);
+                if(getPara("callback") != null) {
+                    String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "修改密码失败，数据库异常", buildUserMap(account.getStr("userName"), 1)));
+                    renderJson(getPara("callback", "default") + "(" + json + ")");
+                } else {
+                    renderJson(ResponseUtil.setRes(CodeType.success, "修改密码失败，数据库异常", buildUserMap(account.getStr("userName"), 1)));
+                }
+            }
+        }else {
+            if(getPara("callback") != null) {
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "旧密码错误", null));
+                renderJson(getPara("callback", "default") + "(" + json + ")");
+            } else {
+                renderJson(ResponseUtil.setRes(CodeType.paramError, "旧密码错误", null));
             }
         }
     }
@@ -83,62 +130,61 @@ public class UserController extends BaseController {
         String id = getPara(0);
         Account account = Account.dao.findById(id);
         if(getPara("callback") != null) {
-            String json = JsonKit.toJson(ResponseUtil.setRes("00", "根据id查询海外仓用户信息成功", buildUserMap(account.getStr("userName"), 1)));
+            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "根据id查询海外仓用户信息成功", buildUserMap(account.getStr("userName"), 1)));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         } else {
-            renderJson(ResponseUtil.setRes("00", "根据id查询海外仓用户信息成功", buildUserMap(account.getStr("userName"), 1)));
+            renderJson(ResponseUtil.setRes(CodeType.success, "根据id查询海外仓用户信息成功", buildUserMap(account.getStr("userName"), 1)));
         }
     }
     /**
-     * 注册用户
+     * 添加区县管理员
      * @Param userName required 用户名
      * @Param pwd required 密码
-     * @Param role required 角色
      * @Param realName 真实姓名
      * @Param areaCode 所属区县代码，评审员用户必须
      * @Param areaLevel 所属区县等级，评审员用户必须
      */
-    @Clear(LoginInterceptor.class)
     @Before(UserValidator.class)
     @ActionKey("/api/hwc/users/register")
     public void addUser(){
         boolean success = Db.tx(new IAtom() {
             public boolean run() throws SQLException {
                 User user = new User();
-                user.set("type", 1);
+                user.set("type", HwcUserType.qxAdmin);
                 user.set("realName", getPara("realName"));
                 user.set("areaCode", getPara("areaCode"));
-                user.set("areaLevel", getPara("areaLevel"));
-                user.set("accountId", 1);
+                user.set("areaLevel", Area.findByAreaCode(getPara("areaCode")).get("level"));
+                user.set("accountId", -1);
                 user = User.add(user);
                 if(user == null)    return false;
                 Account account = new Account();
                 account.set("user", "hwc_users:" + user.get("id"));
                 account.set("userName", getPara("userName"));
                 account.set("pwd", getPara("pwd"));
-                account.set("role", 2);
                 account.set("createAt", TimeUtil.getNowTime());
+                Map<String, Object> loginUser = getSessionAttr("user");
+                account.set("createBy", loginUser.get("id"));
                 account = Account.add(account);
                 if(account == null) return false;
                 user.set("accountId", account.get("id"));
-                if(User.modify(user) == null)   return false;
+                if(user.update() == false)   return false;
                 return true;
             }
         });
         if(success){
             setSessionAttr("user", buildUserMap(getPara("userName"), 2));
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("00", "注册成功", buildUserMap(getPara("userName"), 1)));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "添加区县管理员成功", buildUserMap(getPara("userName"), 1)));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("00", "注册成功", buildUserMap(getPara("userName"), 1)));
+                renderJson(ResponseUtil.setRes(CodeType.success, "添加区县管理员成功", buildUserMap(getPara("userName"), 1)));
             }
         }else {
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("01", "注册失败，数据库异常", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.dataBaseError, "添加区县管理员失败，数据库异常", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("01", "注册失败，数据库异常", null));
+                renderJson(ResponseUtil.setRes(CodeType.dataBaseError, "添加区县管理员失败，数据库异常", null));
             }
         }
     }
@@ -146,7 +192,6 @@ public class UserController extends BaseController {
     /**
      * 修改用户信息
      * @Param userName 用户名
-     * @Param role 角色
      * @Param status 账号状态
      * @Param realName 姓名
      * @Param areaLevel 区县等级
@@ -159,45 +204,49 @@ public class UserController extends BaseController {
     public void update(){
         boolean success = Db.tx(new IAtom() {
             public boolean run() throws SQLException {
-                Account account = Account.dao.findById(getPara(0));
-                //Integer role = getParaToInt("role");
-                //if(role != null)    account.set("role", role);
+                Account account = new Account()
+                        .set("id", getPara(0));
                 Integer status = getParaToInt("status");
-                if(status != null)  account.set("status", status);
-                account.set("lastLogin", TimeUtil.getNowTime());
-                if(Account.modify(account) == null) return false;
-                User user = User.dao.findById(account.getStr("user").split(":")[1]);
-                boolean flag = false;
+                if(status != null)  {
+                    account.set("status", status);
+                    if(Account.modify(account) == null) return false;
+                }
+                account = Account.dao.findById(getPara(0));
+                User user = new User()
+                        .set("id", account.getStr("user").split(":")[1]);
                 String realName = getPara("realName");
+                boolean flag = false;
                 if(realName != null)    {
                     user.set("realName", realName);flag = true;
                 }
-                Integer areaLevel = getParaToInt("areaLevel");
-                if(areaLevel != null)   {
-                    user.set("areaLevel", areaLevel);flag = true;
-                }
                 String areaCode = getPara("areaCode");
                 if(areaCode != null)    {
-                    user.set("areaCode", areaCode);flag = true;
+                    user.set("areaCode", areaCode);
+                    user.set("areaLevel", Area.findByAreaCode(getPara("areaCode")).get("level"));
+                    flag = true;
                 }
-                if(flag && User.modify(user) == null)   return false;
+                if(flag == true && User.modify(user) == null)   return false;
                 return true;
             }
         });
+        Map<String, Object> loginUser = getSessionAttr("user");
+        if(loginUser.get("id").toString().equals(getPara(0).toString())){
+            setSessionAttr("user", buildUserMap(loginUser.get("userName").toString(), 2));
+        }
         if(success){
             Account account = Account.dao.findById(getPara(0));
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("00", "海外仓用户更新成功", buildUserMap(account.getStr("userName"), 1)));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "海外仓用户更新成功", buildUserMap(account.getStr("userName"), 1)));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("00", "海外仓用户更新成功", buildUserMap(account.getStr("userName"), 1)));
+                renderJson(ResponseUtil.setRes(CodeType.success, "海外仓用户更新成功", buildUserMap(account.getStr("userName"), 1)));
             }
         }else{
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("01", "海外仓用户更新失败，数据库异常", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.dataBaseError, "海外仓用户更新失败，数据库异常", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("01", "海外仓用户更新失败，数据库异常", null));
+                renderJson(ResponseUtil.setRes(CodeType.dataBaseError, "海外仓用户更新失败，数据库异常", null));
             }
         }
     }
@@ -221,17 +270,17 @@ public class UserController extends BaseController {
         });
         if(success){
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("00", "海外仓用户删除成功", "success"));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "海外仓用户删除成功", "success"));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("00", "海外仓用户删除成功", "success"));
+                renderJson(ResponseUtil.setRes(CodeType.success, "海外仓用户删除成功", "success"));
             }
         }else {
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("01", "海外仓用户删除失败，数据库异常", "fail"));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.dataBaseError, "海外仓用户删除失败，数据库异常", "fail"));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson( ResponseUtil.setRes("01", "海外仓用户删除失败，数据库异常", "fail"));
+                renderJson( ResponseUtil.setRes(CodeType.dataBaseError, "海外仓用户删除失败，数据库异常", "fail"));
             }
         }
     }
@@ -249,6 +298,15 @@ public class UserController extends BaseController {
         String userName = getPara("userName");
         String pwd = getPara("pwd");
         Account account = Account.findByUserName(userName);
+        if(account.getInt("status") == Status.error){
+            if(getPara("callback") != null) {
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "海外仓用户登录失败，账号被冻结，请联系管理员", null));
+                renderJson(getPara("callback", "default") + "(" + json + ")");
+            } else {
+                renderJson(ResponseUtil.setRes(CodeType.paramError, "海外仓用户登录失败，账号被冻结，请联系管理员", null));
+            }
+            return ;
+        }
         if(account.getStr("pwd").equals(pwd)){
             account.set("lastLogin", TimeUtil.getNowTime());
             Account.modify(account);
@@ -256,17 +314,17 @@ public class UserController extends BaseController {
             setSessionAttr("user", user);
             System.out.println(getSessionAttr("user"));
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("00", "海外仓用户登录成功", buildUserMap(userName, 1)));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "海外仓用户登录成功", buildUserMap(userName, 1)));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("00", "海外仓用户登录成功", buildUserMap(userName, 1)));
+                renderJson(ResponseUtil.setRes(CodeType.success, "海外仓用户登录成功", buildUserMap(userName, 1)));
             }
         }else {
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("02", "海外仓用户登录失败，用户名和密码不匹配", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "海外仓用户登录失败，用户名和密码不匹配", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("02", "海外仓用户登录失败，用户名和密码不匹配", null));
+                renderJson(ResponseUtil.setRes(CodeType.paramError, "海外仓用户登录失败，用户名和密码不匹配", null));
             }
         }
     }
@@ -280,10 +338,10 @@ public class UserController extends BaseController {
     public void Logout(){
         removeSessionAttr("user");
         if(getPara("callback") != null) {
-            String json = JsonKit.toJson(ResponseUtil.setRes("00", "海外仓用户登出成功", "success"));
+            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "海外仓用户登出成功", "success"));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         } else {
-            renderJson(ResponseUtil.setRes("00", "海外仓用户登出成功", "success"));
+            renderJson(ResponseUtil.setRes(CodeType.success, "海外仓用户登出成功", "success"));
         }
     }
 
@@ -298,17 +356,17 @@ public class UserController extends BaseController {
         System.out.println(loginUser);
         if(loginUser == null){
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("04", "用户未登录", null));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.notLogin, "用户未登录", null));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("04", "用户未登录", null));
+                renderJson(ResponseUtil.setRes(CodeType.notLogin, "用户未登录", null));
             }
         }else {
             if(getPara("callback") != null) {
-                String json = JsonKit.toJson(ResponseUtil.setRes("00", "用户已登录", buildUserMap((String)loginUser.get("userName"), 1)));
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "用户已登录", buildUserMap((String)loginUser.get("userName"), 1)));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
             } else {
-                renderJson(ResponseUtil.setRes("00", "用户已登录", buildUserMap((String)loginUser.get("userName"), 1)));
+                renderJson(ResponseUtil.setRes(CodeType.success, "用户已登录", buildUserMap((String)loginUser.get("userName"), 1)));
             }
         }
     }
@@ -375,41 +433,13 @@ public class UserController extends BaseController {
         }
         data.put("list", list);
         if(getPara("callback") != null) {
-            String json = JsonKit.toJson(ResponseUtil.setRes("00", "获取用户分页信息成功", data));
+            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "获取用户分页信息成功", data));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         } else {
-            renderJson(ResponseUtil.setRes("00", "获取用户分页信息成功", data));
+            renderJson(ResponseUtil.setRes(CodeType.success, "获取用户分页信息成功", data));
         }
 
     }
 
-    /**
-     * 用户信息整合
-     * @param userName 用户名
-     * @param type 整合类型 type=1表示返回给客户端用户信息，type=2表示存在服务端session中的用户信息
-     * @return 返回用户信息
-     */
-    private Map<String, Object> buildUserMap(String userName, int type){
-        Map<String, Object> map = new HashMap<String, Object>();
-        Account account = Account.findByUserName(userName);
-        map.put("id", account.get("id"));
-        map.put("userName", account.get("userName"));
-        map.put("status", account.get("status"));
-        map.put("role", Role.dao.findById(account.get("role")));
-        User user = User.dao.findById(account.getStr("user").split(":")[1]);
-        map.put("realName", user.get("realName"));
-        map.put("areaLevel", user.get("areaLevel"));
-        map.put("areaCode", user.get("areaCode"));
-        map.put("sample", Samples.dao.findById(user.get("sampleId")));
-        map.put("warehouseIds", user.getStr("warehouseIds"));
-        map.put("type", user.get("type")); // 1企业用户， 0评审员用户
-        if(type == 2){
-            map.put("accountId", account.get("id"));
-            map.put("hwcUserId", user.get("id"));
-            map.put("pwd", account.get("pwd"));
-            Role role = Role.dao.findById(account.get("role"));
-            map.put("role", role.toRecord().getColumns());
-        }
-        return map;
-    }
+
 }
