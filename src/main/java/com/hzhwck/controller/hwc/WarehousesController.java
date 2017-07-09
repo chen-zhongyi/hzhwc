@@ -2,11 +2,13 @@ package com.hzhwck.controller.hwc;
 
 import com.hzhwck.controller.BaseController;
 import com.hzhwck.model.hwc.*;
-import com.hzhwck.model.system.Account;
 import com.hzhwck.myEnum.CodeType;
 import com.hzhwck.myEnum.HwcUserType;
+import com.hzhwck.myEnum.TableNames;
 import com.hzhwck.util.ResponseUtil;
+import com.jfinal.aop.Before;
 import com.jfinal.core.ActionKey;
+import com.jfinal.ext.interceptor.GET;
 import com.jfinal.kit.JsonKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.IAtom;
@@ -217,26 +219,61 @@ public class WarehousesController extends BaseController{
      */
     @ActionKey("/api/hwc/warehouses/search")
     public void getPage(){
+        String s = TableNames.hwcSamples.split(" ")[1] + ".";
+        String w = TableNames.hwcWarehouses.split(" ")[1] + ".";
         int pageNumber = getParaToInt("pageNumber", 1);
         int pageSize = getParaToInt("pageSize", 20);
-        String oderBy = getPara("oderBy", "id");
-        String oder = getPara("oder", "asc");
-        String filter = getPara("filter", "");
-        String accountId = getPara("userId");  //账号id
+        String oderBy = getPara("oderBy", w + "id");
+        String oder = getPara("oder", "desc");
+        String filter = "";
+        filter = " where " + s + "id = " + w + "sampleId ";
         Map<String, Object> loginUser = getSessionAttr("user");
         if(loginUser.get("type").toString().equals(HwcUserType.sample)){
-            accountId = loginUser.get("accountId").toString();
+            String ids = (String) loginUser.get("warehouseIds");
+            if(ids == null) ids = "-1";
+            filter += " and " + w + "id in(" + ids + ") ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
+            filter += " and " + s + "ssqx = '" + loginUser.get("areaCode") + "' ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.admin)){
+            String ssqx = getPara("areaCode");
+            if(ssqx != null){
+                filter += " and " + s + "ssqx = '" + ssqx + "' ";
+            }
         }
-        String warehouseIds = null;
-        if(accountId != null){
-            Account account = Account.dao.findById(accountId);
-            User user = User.dao.findById(account.getStr("user").split(":")[1]);
-            warehouseIds = user.getStr("warehouseIds") == null ? "-1" : user.getStr("warehouseIds");
-            warehouseIds = warehouseIds.equals("") ? "-1" : warehouseIds;
+
+        String country = getPara("country");
+        if(country != null){
+            filter += " and " + w + "hwcssgj = '" + country + "' ";
         }
-        Page<Warehouses> data = Warehouses.getPage(pageNumber, pageSize, oderBy, oder, filter, warehouseIds);
-        for(Warehouses w : data.getList()){
-            w.put("sample", Samples.dao.findById(w.get("sampleId")));
+
+        String contient = getPara("contient");
+        if(contient != null){
+            filter += " and " + w + "hwcssz = '" + contient + "' ";
+        }
+
+        String jsdwmc = getPara("jsdwmc");
+        if(jsdwmc != null){
+            filter += " and " + s + "jsdwmc like '%" + jsdwmc + "%' ";
+        }
+
+        String shtyxydm = getPara("shtyxydm");
+        if(shtyxydm != null){
+            filter += " and " + s + "shtyxydm like '%" + shtyxydm + "%' ";
+        }
+
+        String hwcmc = getPara("hwcmc");
+        if(hwcmc != null){
+            filter += " and " + w + "hwcmc like '%" + hwcmc + "%' ";
+        }
+
+        String status = getPara("status");
+        if(status != null){
+            filter += " and " + w + "status = " + status + " ";
+        }
+
+        Page<Warehouses> data = Warehouses.getPage(pageNumber, pageSize, oderBy, oder, filter, TableNames.hwcSamples + ", " + TableNames.hwcWarehouses);
+        for(Warehouses warehouse : data.getList()){
+            warehouse.put("sample", Samples.dao.findById(warehouse.get("sampleId")));
         }
         if(getPara("callback") != null){
             String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "获取海外仓库信息成功", data));
@@ -257,6 +294,24 @@ public class WarehousesController extends BaseController{
             renderJson(getPara("callback", "default") + "(" + json + ")");
         }else {
             renderJson(ResponseUtil.setRes(CodeType.success, "根据id获取海外仓库信息成功", Warehouses.dao.findById(id)));
+        }
+    }
+
+    /**
+     * 获取海外仓经纬度
+     */
+    @Before(GET.class)
+    @ActionKey("/api/hwc/warehouses/latandlng")
+    public void getLatAndLng(){
+        List<Warehouses> warehouses = Warehouses.getLatAndLng();
+        for(Warehouses w : warehouses){
+            w.put("jsdwmc", Samples.dao.findById(w.get("sampleId")).get("jsdwmc"));
+        }
+        if(getPara("callback") != null){
+            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "获取海外仓经纬度成功", warehouses));
+            renderJson(getPara("callback", "default") + "(" + json + ")");
+        }else {
+            renderJson(ResponseUtil.setRes(CodeType.success, "获取海外仓经纬度成功", warehouses));
         }
     }
 }

@@ -2,17 +2,23 @@ package com.hzhwck.controller;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.hzhwck.model.hwc.Country;
 import com.hzhwck.model.hwc.Samples;
 import com.hzhwck.model.hwc.User;
 import com.hzhwck.model.system.Account;
 import com.hzhwck.model.system.UserSystem;
+import com.hzhwck.myEnum.TableNames;
 import com.jfinal.core.Controller;
+import com.jfinal.plugin.activerecord.Db;
+import com.jfinal.plugin.activerecord.Record;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +127,39 @@ public class BaseController extends Controller {
             }
         }
         return result.toString();
+    }
+
+    private String r = TableNames.hwcReports.split(" ")[1] + ".";
+
+    private String s = TableNames.hwcSamples.split(" ")[1] + ".";
+
+    private String p = TableNames.hwcReportPlans.split(" ")[1] + ".";
+
+    private String w = TableNames.hwcWarehouses.split(" ")[1] + ".";
+
+    /**
+     * 根据时间和国家统计
+     * @param startAt
+     * @param endAt
+     * @param names
+     * @return
+     */
+    public List<Record> getByMonth(Date startAt, Date endAt, String[] names){
+        String t = TableNames.hwcTable3.split(" ")[1] + ".";
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM");
+        StringBuffer sb = new StringBuffer();
+        for(int i = 0;i < names.length;++i){
+            sb.append("sum(" + t + names[i] + ") as " + names[i]);
+            sb.append(", ");
+        }
+        List<Record> records = Db.find("select " + sb.toString() + w + "hwcssgj " +
+                "from " + TableNames.hwcReportPlans + ", " + TableNames.hwcReports + ", " + TableNames.hwcTable3 + ", " + TableNames.hwcWarehouses + " " +
+                "where " + r + "status = 5 and " + r + "tableId = 3 and " + r + "tableReportId = " + t + "id and " + r + "planId = " + p + "id and " + r + "warehouseId = " + w + "id " +
+                "and DATE_FORMAT(" + p + "round, '%Y-%m') >= '" + sf.format(startAt) + "' and DATE_FORMAT(" + p + "round, '%Y-%m') <= '" + sf.format(endAt) + "' group by " + w + "hwcssgj order by " + w + "hwcssgj");
+        for(Record record : records){
+            record.set("country", Country.getByCode(record.getStr("hwcssgj")));
+        }
+        return records;
     }
 
 }

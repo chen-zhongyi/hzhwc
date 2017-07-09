@@ -39,7 +39,8 @@ public class UserController extends BaseController {
         boolean success = false;
         if(getRequest().getMethod().equals("POST")){
             System.out.println("[POST] add");
-            forwardAction("/api/hwc/users/register");
+            //forwardAction("/api/hwc/users/register");
+            redirect("/api/hwc/users/register" + "?" + getParam());
             success = true;
         }else if(getRequest().getMethod().equals("GET")){
             String id = getPara(0);
@@ -52,7 +53,7 @@ public class UserController extends BaseController {
                 forwardAction("/api/hwc/users/search");
                 success = true;
             }
-        }else if(getRequest().getMethod().equals("PUT")){
+        }else if(getRequest().getMethod().equals("PATCH")){
             String id = getPara(0);
             if(id != null){
                 System.out.println("[PUT] update id -- " + id);
@@ -150,7 +151,7 @@ public class UserController extends BaseController {
         boolean success = Db.tx(new IAtom() {
             public boolean run() throws SQLException {
                 User user = new User();
-                user.set("type", HwcUserType.qxAdmin);
+                user.set("type", getPara("type"));
                 user.set("realName", getPara("realName"));
                 user.set("areaCode", getPara("areaCode"));
                 user.set("areaLevel", Area.findByAreaCode(getPara("areaCode")).get("level"));
@@ -172,7 +173,7 @@ public class UserController extends BaseController {
             }
         });
         if(success){
-            setSessionAttr("user", buildUserMap(getPara("userName"), 2));
+            //setSessionAttr("user", buildUserMap(getPara("userName"), 2));
             if(getPara("callback") != null) {
                 String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "添加区县管理员成功", buildUserMap(getPara("userName"), 1)));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
@@ -207,15 +208,20 @@ public class UserController extends BaseController {
                 Account account = new Account()
                         .set("id", getPara(0));
                 Integer status = getParaToInt("status");
+                boolean flag = false;
                 if(status != null)  {
-                    account.set("status", status);
-                    if(Account.modify(account) == null) return false;
+                    account.set("status", status);flag = true;
                 }
+                String pwd = getPara("pwd");
+                if(pwd != null){
+                    account.set("pwd", pwd);flag = true;
+                }
+                if(flag == true && Account.modify(account) == null) return false;
                 account = Account.dao.findById(getPara(0));
                 User user = new User()
                         .set("id", account.getStr("user").split(":")[1]);
                 String realName = getPara("realName");
-                boolean flag = false;
+                flag = false;
                 if(realName != null)    {
                     user.set("realName", realName);flag = true;
                 }
@@ -391,10 +397,21 @@ public class UserController extends BaseController {
         String hu = TableNames.hwcUsers.split(" ")[1] + ".";
         String hs = TableNames.hwcSamples.split(" ")[1] + ".";
         String orderBy = getPara("oderBy", hu + "id");
-        String filter = " where " + sa + "id = " + hu + "accountId and (" + hu + "sampleId = " + hs + "id or " + hu + "sampleId is null) ";
+        String filter = " where " + sa + "id = " + hu + "accountId ";
         Map<String, Object> loginUser = getSessionAttr("user");
         if(loginUser.get("type").toString().equals(HwcUserType.sample)){
             filter += " and " + sa + "id = " + loginUser.get("accountId") + " ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
+            String accountId = loginUser.get("id").toString();
+            filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode = '" + loginUser.get("areaCode") + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null " +
+                    "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + loginUser.get("areaCode") + "')) ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.admin)){
+            String areaCode = getPara("areaCode");
+            String accountId = loginUser.get("id").toString();
+            if(areaCode != null){
+                filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode = '" + areaCode + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null " +
+                        "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + areaCode + "')) ";
+            }
         }
         String status = getPara("status");
         if(status != null){
@@ -409,10 +426,6 @@ public class UserController extends BaseController {
         String realName = getPara("realName");
         if(realName != null){
             filter += " and " + hu + "realName like '%" + realName + "%' ";
-        }
-        String areaCode = getPara("areaCode");
-        if(areaCode != null){
-            filter += " and (" + hu + "areaCode = '" + areaCode + "' or (" + hs + "ssqx = '" + areaCode + "' and "+ hu + "sampleId is not null)) ";
         }
         String type = getPara("type");
         if(type != null){

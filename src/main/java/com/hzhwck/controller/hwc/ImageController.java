@@ -2,7 +2,9 @@ package com.hzhwck.controller.hwc;
 
 import com.google.common.io.Files;
 import com.hzhwck.controller.BaseController;
+import com.hzhwck.interceptor.LoginInterceptor;
 import com.hzhwck.util.ResponseUtil;
+import com.jfinal.aop.Clear;
 import com.jfinal.core.ActionKey;
 import com.jfinal.kit.JsonKit;
 import com.jfinal.kit.PathKit;
@@ -18,6 +20,7 @@ import java.util.Map;
 /**
  * Created by 陈忠意 on 2017/6/26.
  */
+@Clear(LoginInterceptor.class)
 public class ImageController extends BaseController{
 
     @ActionKey("/api/hwc/images")
@@ -31,19 +34,19 @@ public class ImageController extends BaseController{
             String id = getPara(0);
             if(id != null){
                 System.out.println("[GET] show id -- " + id);
-                forwardAction("/api/hwc/images/id/" + id);
-                success = true;
+                //forwardAction("/api/hwc/images/id/" + id);
+                //success = true;
             }else {
                 System.out.println("[GET] show list");
-                forwardAction("/api/hwc/images/search");
-                success = true;
+                //forwardAction("/api/hwc/images/search");
+                //success = true;
             }
         }else if(getRequest().getMethod().equals("PUT")){
             String id = getPara(0);
             if(id != null){
                 System.out.println("[PUT] update id -- " + id);
-                forwardAction("/api/hwc/images/modify/" + id);
-                success = true;
+                //forwardAction("/api/hwc/images/modify/" + id);
+                //success = true;
             }
         }else if(getRequest().getMethod().equals("DELETE")){
             String id = getPara(0);
@@ -84,8 +87,8 @@ public class ImageController extends BaseController{
         int width = getParaToInt("width", 100);
         int height = getParaToInt("height", 100);
         SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-        String path = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + "hwc-" + s.format(new Date()) + suffix;
-        File file = new File(path);
+        String name = "hwc-images-" + s.format(new Date()) + suffix;
+        File file = new File(PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + name);
         try{
             Files.copy(tempFile, file);
             tempFile.delete();
@@ -100,7 +103,7 @@ public class ImageController extends BaseController{
             return;
         }
         Map<String, String> data = new HashMap<String, String>();
-        data.put("path", "/hwckimages/hwc-" + s.format(new Date()) + suffix);
+        data.put("path", "/hwckimages/" + name);
         if(getPara("callback") != null){
             String json = JsonKit.toJson(ResponseUtil.setRes("00", "文件上传成功", data));
             renderJson(getPara("callback", "default") + "(" + json + ")");

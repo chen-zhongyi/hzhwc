@@ -12,6 +12,7 @@ import com.hzhwck.interceptor.LoginInterceptor;
 import com.hzhwck.model.hwc.*;
 import com.hzhwck.model.system.*;
 import com.jfinal.config.*;
+import com.jfinal.core.Const;
 import com.jfinal.kit.Prop;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
@@ -25,6 +26,7 @@ public class Config extends JFinalConfig {
     public void configConstant(Constants me) {
         me.setDevMode(true);
         me.setBaseUploadPath("hwckimages");
+        me.setMaxPostSize(10 * Const.DEFAULT_MAX_POST_SIZE);
     }
     public void configRoute(Routes me) {
         /*me.add("/hello", HelloController.class, "/");
@@ -59,6 +61,9 @@ public class Config extends JFinalConfig {
         me.add("/api/hwc/excel", ExcelController.class);
         me.add("/api/hwc/register", RegisterLoginController.class);
         me.add("/api/hwc/systems", SystemsController.class);
+        me.add("/api/hwc/videos", VideoController.class);
+        me.add("/api/hwc/cameras", CameraController.class);
+        me.add("/api/hwc/pdf", PDFController.class);
     }
     public void configEngine(Engine me) {}
     public void configPlugin(Plugins me) {
@@ -98,6 +103,8 @@ public class Config extends JFinalConfig {
         arp.addMapping("hwc_continents", Contient.class);
         arp.addMapping("hwc_yuanqu", Yuanqu.class);
         arp.addMapping("hwc_system", Systems.class);
+        arp.addMapping("hwc_cameras", Camera.class);
+        arp.addMapping("hwc_pdf", Pdf.class);
     }
     public void configInterceptor(Interceptors me) {
         me.addGlobalActionInterceptor(new LoggerGlobalInterceptor());

@@ -3,11 +3,10 @@ package com.hzhwck.controller.hwc;
 import com.hzhwck.controller.BaseController;
 import com.hzhwck.model.hwc.Samples;
 import com.hzhwck.model.hwc.ServiceCompanys;
-import com.hzhwck.model.hwc.User;
 import com.hzhwck.model.hwc.Warehouses;
-import com.hzhwck.model.system.Account;
 import com.hzhwck.myEnum.CodeType;
 import com.hzhwck.myEnum.HwcUserType;
+import com.hzhwck.myEnum.TableNames;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.core.ActionKey;
 import com.jfinal.kit.JsonKit;
@@ -39,7 +38,7 @@ public class ServiceCompanysController extends BaseController {
                 forwardAction("/api/hwc/servicecompanys/search");
                 success = true;
             }
-        }else if(getRequest().getMethod().equals("PUT")){
+        }else if(getRequest().getMethod().equals("PATCH")){
             String userName = getPara(0);
             if(userName != null){
                 System.out.println("[PUT] update userName -- " + userName);
@@ -157,60 +156,52 @@ public class ServiceCompanysController extends BaseController {
      */
     @ActionKey("/api/hwc/servicecompanys/search")
     public void search(){
-        String userId = "";
-        String accountId = getPara("userId");
         Map<String, Object> loginUser = getSessionAttr("user");
+        String s = TableNames.hwcSamples.split(" ")[1] + ".";
+        String w = TableNames.hwcWarehouses.split(" ")[1] + ".";
+        String sc = TableNames.hwcServiceCompanys.split(" ")[1] + ".";
+        String filter = " where " + sc + "warehouseId = " + w + "id and " + w + "sampleId = " + s + "id ";
         if(loginUser.get("type").toString().equals(HwcUserType.sample)){
-            accountId = loginUser.get("accountId").toString();
-        }
-        if(accountId != null){
-            Account account = Account.dao.findById(accountId);
-            userId = account.getStr("user").split(":")[1];
-        }
-        String sampleId = getPara("sampleId");
-        if(userId.equals("") && sampleId != null){
-            Samples sample = Samples.dao.findById(sampleId);
-            userId = sample.getStr("userId");
-        }
-        String ids = "";
-        if(!userId.equals("")){
-            String warehouseIds = User.dao.findById(userId).getStr("warehouseIds");
-            if(warehouseIds != null){
-                for(String warehouseId : warehouseIds.split(",")) {
-                    Warehouses warehouse = Warehouses.dao.findById(warehouseId);
-                    String sIds = warehouse.getStr("serviceCompanyIds");
-                    if(sIds != null){
-                        if (ids.equals("")) ids = sIds;
-                        else
-                            ids += "," + sIds;
-                    }
-                }
+            Samples sample = (Samples) loginUser.get("sample");
+            if(sample == null)
+                filter += " and " + s + "id = -1 " ;
+            else
+                filter += " and " + s + "id = " + sample.get("id") + " ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
+            filter += " and " + s + "ssqx = '" + loginUser.get("areaCode") + "' ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.admin)){
+            String ssqx = getPara("areaCode");
+            if(ssqx != null){
+                filter += " and " + s + "ssqx = '" + ssqx + "' ";
             }
         }
-        String warehouseId = getPara("warehouseId");
-        if(warehouseId != null){
-            Warehouses warehouse = Warehouses.dao.findById(warehouseId);
-            String sIds = warehouse.getStr("serviceCompanyIds");
-            if(sIds != null){
-                ids = sIds;
-            }else {
-                ids = "-1";
-            }
+        String jsdwmc = getPara("jsdwmc");
+        if(jsdwmc != null){
+            filter += " and " + s + "jsdwmc like '%" + jsdwmc + "%' ";
         }
-        if(ids.equals(""))  ids = "-1";
-        Page<ServiceCompanys> s = ServiceCompanys.dao.paginate(getParaToInt("pageNumber", 1),
-                getParaToInt("pageSize", 20),
-                "select * ", "from hwc_servicecompanys where id in (" + ids + ")");
-        for(ServiceCompanys serviceCompany : s.getList()){
-            Warehouses w = Warehouses.dao.findById(serviceCompany.get("warehouseId"));
-            serviceCompany.put("warehouse", w);
-            serviceCompany.put("sample", Samples.dao.findById(w.get("sampleId")));
+
+        String shtyxydm = getPara("shtyxydm");
+        if(shtyxydm != null){
+            filter += " and " + s + "shtyxydm like '%" + shtyxydm + "%' ";
+        }
+
+        String hwcmc = getPara("hwcmc");
+        if(hwcmc != null){
+            filter += " and " + w + "hwcmc like '%" + hwcmc + "%' ";
+        }
+        Page<ServiceCompanys> serviceCompanys = ServiceCompanys.getPage(getParaToInt("pageNumber", 1), getParaToInt("pageSize", 20),
+                sc + "id", "desc", filter,
+                TableNames.hwcSamples + ", " + TableNames.hwcServiceCompanys + ", " +TableNames.hwcWarehouses);
+        for(ServiceCompanys serviceCompany : serviceCompanys.getList()){
+            Warehouses warehouse = Warehouses.dao.findById(serviceCompany.get("warehouseId"));
+            serviceCompany.put("warehouse", warehouse);
+            serviceCompany.put("sample", Samples.dao.findById(warehouse.get("sampleId")));
         }
         if(getPara("callback") != null) {
-            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "海外仓服务企业信息成功", s));
+            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "海外仓服务企业信息成功", serviceCompanys));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         } else {
-            renderJson(ResponseUtil.setRes(CodeType.success, "海外仓服务企业信息成功", s));
+            renderJson(ResponseUtil.setRes(CodeType.success, "海外仓服务企业信息成功", serviceCompanys));
         }
     }
 

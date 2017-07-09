@@ -6,6 +6,7 @@ import com.hzhwck.model.hwc.Samples;
 import com.hzhwck.model.hwc.Warehouses;
 import com.hzhwck.myEnum.CodeType;
 import com.hzhwck.myEnum.HwcUserType;
+import com.hzhwck.myEnum.TableNames;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.core.ActionKey;
 import com.jfinal.kit.JsonKit;
@@ -39,7 +40,7 @@ public class CameraController extends BaseController{
                 forwardAction("/api/hwc/cameras/search");
                 success = true;
             }
-        }else if(getRequest().getMethod().equals("PUT")){
+        }else if(getRequest().getMethod().equals("PATCH")){
             String id = getPara(0);
             if(id != null){
                 System.out.println("[PUT] update id -- " + id);
@@ -83,7 +84,9 @@ public class CameraController extends BaseController{
                 renderJson(ResponseUtil.setRes(CodeType.dataBaseError, "添加海外仓视频监控失败，数据库异常，请联系管理员", null));
             }
         }else{
-            camera.put("warehouse", Warehouses.dao.findById(getPara("warehouseId")));
+            Warehouses w = Warehouses.dao.findById(getPara("warehouseId"));
+            camera.put("warehouse", w);
+            camera.put("sample", Samples.dao.findById(w.get("sampleId")));
             if(getPara("callback") != null) {
                 String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "添加海外仓视频监控成功", camera));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
@@ -125,7 +128,9 @@ public class CameraController extends BaseController{
             }
         }else {
             camera = Camera.dao.findById(getPara(0));
-            camera.put("warehouse", Warehouses.dao.findById(camera.get("warehouseId")));
+            Warehouses w = Warehouses.dao.findById(getPara("warehouseId"));
+            camera.put("warehouse", w);
+            camera.put("sample", Samples.dao.findById(w.get("sampleId")));
             if(getPara("callback") != null) {
                 String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "修改海外仓视频监控成功", camera));
                 renderJson(getPara("callback", "default") + "(" + json + ")");
@@ -138,10 +143,12 @@ public class CameraController extends BaseController{
     /**
      * 根据id查询camera
      */
-    @ActionKey("/api/hwc/cameras/")
+    @ActionKey("/api/hwc/cameras/id")
     public void getCameraById(){
         Camera camera = Camera.dao.findById(getPara(0));
-        camera.put("warehouse", Warehouses.dao.findById(camera.get("warehouseId")));
+        Warehouses w = Warehouses.dao.findById(camera.get("warehouseId"));
+        camera.put("warehouse", w);
+        camera.put("sample", Samples.dao.findById(w.get("sampleId")));
         if(getPara("callback") != null) {
             String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "根据id查询视频监控成功", camera));
             renderJson(getPara("callback", "default") + "(" + json + ")");
@@ -167,28 +174,49 @@ public class CameraController extends BaseController{
     /**
      * 视频监控搜索
      */
+    @ActionKey("/api/hwc/cameras/search")
     public void search(){
-        String filter = "";
-        String warehouseId = getPara("warehouseId");
         Map<String, Object> loginUser = getSessionAttr("user");
+        String s = TableNames.hwcSamples.split(" ")[1] + ".";
+        String w = TableNames.hwcWarehouses.split(" ")[1] + ".";
+        String sc = TableNames.hwcCameras.split(" ")[1] + ".";
+        String filter = " where " + sc + "warehouseId = " + w + "id and " + w + "sampleId = " + s + "id ";
         if(loginUser.get("type").toString().equals(HwcUserType.sample)){
-            if(warehouseId == null){
-                Object warehouseIds = loginUser.get("warehouseIds");
-                if(warehouseIds == null)
-                    filter = " where warehouseId in (-1) ";
-
-                else{
-                    filter = " where warehouseId in (" + warehouseIds + ") ".replace(warehouseId, "-1");
-                }
+            Samples sample = (Samples) loginUser.get("sample");
+            if(sample == null)
+                filter += " and " + s + "id = -1 " ;
+            else
+                filter += " and " + s + "id = " + sample.get("id") + " ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
+            filter += " and " + s + "ssqx = '" + loginUser.get("areaCode") + "' ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.admin)){
+            String ssqx = getPara("areaCode");
+            if(ssqx != null){
+                filter += " and " + s + "ssqx = '" + ssqx + "' ";
             }
         }
-        Page<Camera> cameras = Camera.getPage(getParaToInt("pageNumber", 1),
-                getParaToInt("pageSize", 20),
-                "id", "desc", filter);
+        String jsdwmc = getPara("jsdwmc");
+        if(jsdwmc != null){
+            filter += " and " + s + "jsdwmc like '%" + jsdwmc + "%' ";
+        }
+
+        String shtyxydm = getPara("shtyxydm");
+        if(shtyxydm != null){
+            filter += " and " + s + "shtyxydm like '%" + shtyxydm + "%' ";
+        }
+
+        String hwcmc = getPara("hwcmc");
+        if(hwcmc != null){
+            filter += " and " + w + "hwcmc like '%" + hwcmc + "%' ";
+        }
+        Page<Camera> cameras = Camera.getPage(getParaToInt("pageNumber", 1), getParaToInt("pageSize", 20),
+                sc + "id", "desc", filter,
+                TableNames.hwcSamples + ", " + TableNames.hwcCameras + ", " +TableNames.hwcWarehouses);
+
         for(Camera camera : cameras.getList()) {
             Warehouses warehouse = Warehouses.dao.findById(camera.get("warehouseId"));
-            camera.set("warehouse", warehouse);
-            camera.set("sample", Samples.dao.findById(warehouse.get("sampleId")));
+            camera.put("warehouse", warehouse);
+            camera.put("sample", Samples.dao.findById(warehouse.get("sampleId")));
         }
         if(getPara("callback") != null) {
             String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "视频监控搜索", cameras));
@@ -197,4 +225,6 @@ public class CameraController extends BaseController{
             renderJson(ResponseUtil.setRes(CodeType.success, "视频监控搜索", cameras));
         }
     }
+
+
 }

@@ -21,4 +21,8 @@ public class Country extends Model<Country> {
     public static List<Country> getByContientCode(String code){
         return Country.dao.find("select * from " + tableName + " where contientCode = '" + code + "'");
     }
+
+    public static Country getByCode(String code){
+        return Country.dao.findFirst("select * from " + tableName + " where code = '" + code + "'");
+    }
 }

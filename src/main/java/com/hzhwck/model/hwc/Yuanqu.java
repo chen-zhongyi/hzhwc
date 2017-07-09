@@ -22,4 +22,8 @@ public class Yuanqu extends Model<Yuanqu> {
         System.out.println("areaCode = " + code);
         return Yuanqu.dao.find("select * from " + tableName + " where areaCode = '" + code + "'");
     }
+
+    public static Yuanqu getYuanquByCode(String code){
+        return Yuanqu.dao.findFirst("select * from " + tableName + " where code = '" + code + "' ");
+    }
 }

@@ -1,6 +1,7 @@
 package com.hzhwck.controller.hwc;
 
 import com.hzhwck.controller.BaseController;
+import com.hzhwck.model.hwc.ReportPlans;
 import com.hzhwck.model.hwc.Samples;
 import com.hzhwck.model.hwc.Tables;
 import com.hzhwck.model.hwc.Warehouses;
@@ -14,6 +15,8 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -30,7 +33,6 @@ public class GetReports extends BaseController{
         String sampleId = getPara("sampleId");
         Map<String, Object> loginUser = getSessionAttr("user");
         if(loginUser.get("type").toString().equals(HwcUserType.sample)){
-            System.out.println("nishi");
             Samples sample = (Samples) loginUser.get("sample");
             sampleId = sample == null ? null : sample.get("id").toString();
         }
@@ -38,13 +40,19 @@ public class GetReports extends BaseController{
         if(sampleId != null)    wSampleId = " and w.sampleId = " + sampleId + " ";
         if(sampleId == null)    sampleId = "";
         else sampleId = " and s.id = " + sampleId + " ";
-        String areaCode = getPara("ssqy");
+        String areaCode = getPara("areaCode");
+        if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
+            areaCode = (String) loginUser.get("areaCode");
+        }
         String status = getPara("status");
         int pageNumber = getParaToInt("pageNumber", 1);
         int pageSize = getParaToInt("pageSize", 20);
+
         if(status != null){
-            if(status.equals("-1")){
-                status = "null";
+            if(status.equals("0")){
+                status = " where (ta.status = 0 or ta.status is null) ";
+            }else {
+                status = " where ta.status = " + status + " ";
             }
         }else {
             status = "";
@@ -58,22 +66,35 @@ public class GetReports extends BaseController{
             sampleFilter = " and s.jsdwmc like '%" + sampleName + "%' ";
         }
         if(areaCode != null){
-            sampleFilter += " and s.ssqy = " + areaCode + " ";
+            sampleFilter += " and s.ssqx = '" + areaCode + "' ";
         }
+
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM");
+        Date startAt = getParaToDate("startAt");
+        if(startAt != null){
+            sampleFilter += " and DATE_FORMAT(p.round, '%Y-%m') >= '" + sf.format(startAt) + "' ";
+        }
+
+        Date endAt = getParaToDate("endAt");
+        if(endAt != null){
+            sampleFilter += " and DATE_FORMAT(p.round, '%Y-%m') <= '" + sf.format(endAt) + "' ";
+        }
+
         Page<Record> records = Db.paginate(pageNumber, pageSize, "select ta.* ", "from (select al.*, null as warehouseId, r.status, r.id from " +
-                "(select t.id as tableId, p.id as planId, s.id as sampleId, p.startAt, p.endAt, p.round from hwc_tables t, hwc_reportplans p, hwc_samples s where p.tableGroupId = t.groupId and t.isRelatedWithWarehouse = 0 " + sampleId + tableId + " " + sampleFilter + ") as al " +
+                "(select t.id as tableId, p.id as planId, s.id as sampleId, p.startAt, p.endAt, p.round from hwc_tables t, hwc_reportplans p, hwc_samples s where p.tableGroupId = t.groupId and t.isRelatedWithWarehouse = 0 and p.status = 1 " + sampleId + tableId + " " + sampleFilter + " ) as al " +
                 "left outer join " +
                 "hwc_reports as r " +
                 "on r.tableId = al.tableId and r.planId = al.planId and r.sampleId = al.sampleId"
                 + " union all " +
                 "select al.*, r.status, r.id from " +
-                "(select t.id as tableId, p.id as planId, w.sampleId, p.startAt, p.endAt, p.round, w.id as warehouseId from hwc_tables t, hwc_reportplans p, hwc_warehouses w where p.tableGroupId = t.groupId and t.isRelatedWithWarehouse = 1 " + wSampleId + tableId + " " + sampleFilter + ") as al " +
+                "(select t.id as tableId, p.id as planId, w.sampleId, p.startAt, p.endAt, p.round, w.id as warehouseId from hwc_tables t, hwc_reportplans p, hwc_warehouses w, hwc_samples s where s.id = w.sampleId and p.tableGroupId = t.groupId and t.isRelatedWithWarehouse = 1 and w.status = 1 and p.status = 1 " + wSampleId + tableId + " " + sampleFilter + " ) as al " +
                 "left outer join " +
                 "hwc_reports as r " +
-                "on r.tableId = al.tableId and r.planId = al.planId and r.sampleId = al.sampleId and r.warehouseId = al.warehouseId) ta");
+                "on r.tableId = al.tableId and r.planId = al.planId and r.sampleId = al.sampleId and r.warehouseId = al.warehouseId) ta " + status );
         for(Record record : records.getList()){
             record.set("table", Tables.dao.findById(record.get("tableId").toString()));
             record.set("sample", Samples.dao.findById(record.get("sampleId").toString()));
+            record.set("plan", ReportPlans.getReportPlansAndTableGroupsById(record.get("planId").toString()));
             if(record.get("warehouseId") == null)   continue;
             record.set("warehouse", Warehouses.dao.findById(record.get("warehouseId").toString()));
         }

@@ -141,10 +141,22 @@ public class SamplesController extends BaseController {
         String oderBy = getPara("oderBy", "id");
         String oder = getPara("oder", "asc");
         String filter = "";
-        String ssqx = getPara("ssqx");
-        if(ssqx != null){
-            filter = " where ssqx='" + ssqx + "' ";
+        Map<String, Object> loginUser = getSessionAttr("user");
+        if(loginUser.get("type").toString().equals(HwcUserType.sample)){
+            Samples sample = (Samples) loginUser.get("sample");
+            String id = sample == null ? "-1" : sample.get("id").toString();
+            if(filter.equals(""))   filter = " where id=" + id + " ";
+            else
+                filter += " and id=" + id + " " ;
+        }else if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
+            filter = " where ssqx = '" + loginUser.get("areaCode") + "' ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.admin)){
+            String ssqx = getPara("areaCode");
+            if(ssqx != null){
+                filter = " where ssqx='" + ssqx + "' ";
+            }
         }
+
         String shtyxydm = getPara("shtyxydm");
         if(shtyxydm != null){
             if(filter.equals(""))   filter = " where shtyxydm like '%" + shtyxydm + "%'";
@@ -157,14 +169,7 @@ public class SamplesController extends BaseController {
             else
                 filter += " and jsdwmc like '%" + jsdwmc + "%'";
         }
-        Map<String, Object> loginUser = getSessionAttr("user");
-        if(loginUser.get("type").toString().equals(HwcUserType.sample)){
-            Samples sample = (Samples) loginUser.get("sample");
-            String id = sample == null ? "0" : sample.get("id").toString();
-            if(filter.equals(""))   filter = " where id=" + id + " ";
-            else
-                filter += " and id=" + id + " " ;
-        }
+
         if(getPara("callback") != null){
             String json = JsonKit.toJson(ResponseUtil.setRes("00", "获取海外仓企业信息成功",
                     Samples.getPage(pageNumber, pageSize, oderBy, oder, filter)));

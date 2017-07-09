@@ -11,6 +11,8 @@ import com.jfinal.kit.JsonKit;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -36,11 +38,12 @@ public class ReportController extends BaseController{
                 forwardAction("/api/hwc/reports/search");
                 success = true;
             }
-        }else if(getRequest().getMethod().equals("PUT")){
+        }else if(getRequest().getMethod().equals("PATCH")){
             String id = getPara(0);
             if(id != null){
                 System.out.println("[PUT] update id -- " + id);
-                forwardAction("/api/hwc/reports/modify/" + id);
+                //forwardAction("/api/hwc/reports/modify/" + id);
+                redirect("/api/hwc/reports/modify/" + id + "?" + getParam());
                 success = true;
             }
         }else if(getRequest().getMethod().equals("DELETE")){
@@ -72,6 +75,7 @@ public class ReportController extends BaseController{
     public void getPage(){
         String hr = TableNames.hwcReports.split(" ")[1] + ".";
         String hs = TableNames.hwcSamples.split(" ")[1] + ".";
+        String hp = TableNames.hwcReportPlans.split(" ")[1] + ".";
 
         int pageNumber = getParaToInt("pageNumber", 1);
         int pageSize = getParaToInt("pageSize", 20);
@@ -80,18 +84,32 @@ public class ReportController extends BaseController{
         String filter = "";
 
         //报表记录字段过滤
-        String sampleId = getPara("sampleId");
         Map<String, Object> loginUser = getSessionAttr("user");
         if(loginUser.get("type").toString().equals(HwcUserType.sample)){
             //企业用户
             Samples sample = (Samples) loginUser.get("sample");
-            sampleId = sample != null ? sample.get("id").toString() : "";
+            String sampleId = sample != null ? sample.get("id").toString() : "-1";
+            if(filter.equals(""))
+                filter = " where " + hr + "sampleId = " + sampleId + " ";
+            else
+                filter += " and " + hr + "sampleId = " + sampleId + " " ;
         }else if(loginUser.get("type").toString().equals(HwcUserType.admin)){
-            //评审员用户
+            //市级管理员
+            String areaCode = getPara("areaCode");
+            if(areaCode != null){
+                if(filter.equals(""))
+                    filter = " where " + hs + "ssqx = '" + areaCode + "' ";
+                else
+                    filter += " and " + hs + "ssqx = '" + areaCode + "' ";
+            }
+        }else if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
+            if(filter.equals(""))
+                filter = " where " + hs + "ssqx = '" + loginUser.get("areaCode") + "' ";
+            else
+                filter += " and " + hs + "ssqx = '" + loginUser.get("areaCode") + "' ";
         }
-        if(sampleId != null){
-            filter += " where " + hr + "sampleId = " + sampleId + " ";
-        }
+
+
         String tableId = getPara("tableId");
         if(tableId != null){
             if(filter.equals(""))   filter = " where " + hr + "tableId = " + tableId + " ";
@@ -107,9 +125,9 @@ public class ReportController extends BaseController{
         }
 
         //样本企业过滤
-        if(filter.equals(""))   filter = " where " + hr + "sampleId = " + hs + "id ";
+        if(filter.equals(""))   filter = " where " + hr + "sampleId = " + hs + "id and " + hr + "planId = " + hp + "id ";
         else
-            filter += " and " + hr + "sampleId = " + hs + "id ";
+            filter += " and " + hr + "sampleId = " + hs + "id and " + hr + "planId = " + hp + "id ";
         String jsdwmc = getPara("jsdwmc");
         if(jsdwmc != null){
             filter += " and " + hs + "jsdwmc like '%" + jsdwmc + "%' " ;
@@ -119,7 +137,18 @@ public class ReportController extends BaseController{
             filter += " and " + hs + "shtyxydm like '%" + shtyxydm + "%' " ;
         }
 
-        Page<Reports> reports =  Reports.getPage(pageNumber, pageSize, oderBy, oder, filter, ", " + TableNames.hwcSamples);
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM");
+        Date startAt = getParaToDate("startAt");
+        if(startAt != null){
+            filter += " and DATE_FORMAT(" + hp + "round, '%Y-%m') >= '" + sf.format(startAt) + "' ";
+        }
+
+        Date endAt = getParaToDate("endAt");
+        if(endAt != null){
+            filter += " and DATE_FORMAT(" + hp + "round, '%Y-%m') <= '" + sf.format(endAt) + "' ";
+        }
+
+        Page<Reports> reports =  Reports.getPage(pageNumber, pageSize, oderBy, oder, filter, ", " + TableNames.hwcSamples + ", " + TableNames.hwcReportPlans);
         for(Reports report : reports.getList()){
             report.put("table", Tables.dao.findById(report.get("tableId")));
             report.put("sample", Samples.dao.findById(report.get("sampleId")));
@@ -127,8 +156,15 @@ public class ReportController extends BaseController{
             if(report.get("warehouseId") == null)   continue;
             report.put("warehouse", Warehouses.dao.findById(report.get("warehouseId")));
         }
-        renderJson(ResponseUtil.setRes("00", "获取分页报表成功",
+        if(getPara("callback") != null){
+            String json = JsonKit.toJson(ResponseUtil.setRes("00", "获取分页报表成功",
+                    reports));
+            renderJson(getPara("callback", "default") + "(" + json + ")");
+        }else {
+            renderJson(ResponseUtil.setRes("00", "获取分页报表成功",
                 reports));
+        }
+
     }
 
     /**
@@ -164,7 +200,7 @@ public class ReportController extends BaseController{
         Record r = Reports.dao.findById(report.get("id")).toRecord();
         r.set("table", Tables.dao.findById(r.get("tableId")));
         r.set("sample", Samples.dao.findById(r.get("sampleId")));
-        r.set("plan", ReportPlans.dao.findById(r.get("planId")));
+        r.set("plan", ReportPlans.getReportPlansAndTableGroupsById(r.get("planId").toString()));
         r.set("warehouse", Warehouses.dao.findById(r.get("warehouseId")));
         if(getPara("callback") != null){
             String json = JsonKit.toJson(ResponseUtil.setRes("00", "表报填写成功",r));
@@ -182,12 +218,10 @@ public class ReportController extends BaseController{
     public void modify(){
         String id = getPara(0);
         Reports report = Reports.dao.findById(id);
-        //report.set("modifyAt", TimeUtil.getNowTime());
-        //report.set("modifyBy", ((Map<String, Object>)getSessionAttr("user")).get("hwcUserId"));
         String status = getPara("status");
         Map<String, Object> loginUser = getSessionAttr("user");
         boolean flag = false;
-        if(loginUser.get("type").toString().equals(HwcUserType.admin) && status != null){
+        if((loginUser.get("type").toString().equals(HwcUserType.admin) || loginUser.get("type").toString().equals(HwcUserType.qxAdmin))&& status != null){
             String areaCode = (String) loginUser.get("areaCode");
             if(areaCode.equals("top")){
                 report.set("finalApproveComment", getPara("comment"));
@@ -214,7 +248,7 @@ public class ReportController extends BaseController{
         Record r = Reports.dao.findById(id).toRecord();
         r.set("table", Tables.dao.findById(r.get("tableId")));
         r.set("sample", Samples.dao.findById(r.get("sampleId")));
-        r.set("plan", ReportPlans.dao.findById(r.get("planId")));
+        r.set("plan", ReportPlans.getReportPlansAndTableGroupsById(r.get("planId").toString()));
         r.set("warehouse", Warehouses.dao.findById(r.get("warehouseId")));
         if(getPara("callback") != null){
             String json = JsonKit.toJson(ResponseUtil.setRes("00", "表报修改成功", r));
@@ -233,7 +267,7 @@ public class ReportController extends BaseController{
         Record r = Reports.dao.findById(id).toRecord();
         r.set("table", Tables.dao.findById(r.get("tableId")));
         r.set("sample", Samples.dao.findById(r.get("sampleId")));
-        r.set("plan", ReportPlans.dao.findById(r.get("planId")));
+        r.set("plan", ReportPlans.getReportPlansAndTableGroupsById(r.get("planId").toString()));
         r.set("warehouse", Warehouses.dao.findById(r.get("warehouseId")));
         if(getPara("callback") != null){
             String json = JsonKit.toJson(ResponseUtil.setRes("00", "根据id获取报表成功", r));

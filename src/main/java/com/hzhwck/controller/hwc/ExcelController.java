@@ -4,7 +4,9 @@ import com.hzhwck.controller.BaseController;
 import com.hzhwck.interceptor.LoginInterceptor;
 import com.hzhwck.model.hwc.Samples;
 import com.hzhwck.model.hwc.ServiceCompanys;
+import com.hzhwck.model.hwc.User;
 import com.hzhwck.model.hwc.Warehouses;
+import com.hzhwck.myEnum.TableNames;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.aop.Before;
 import com.jfinal.aop.Clear;
@@ -22,9 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by 陈忠意 on 2017/7/1.
@@ -114,31 +114,34 @@ public class ExcelController extends BaseController{
             for(Sheet sheet : wb){
                 int st = Math.min(20, sheet.getFirstRowNum());
                 int end = Math.max(200, sheet.getLastRowNum());
+                System.out.println("st = " + st + ", " + end);
                 Row row = sheet.getRow(st);
                 int maxNum = Math.max(20, row.getLastCellNum());
                 int[] index = new int[N];
                 for(int i = 0;i < maxNum;++i){
                     Cell cell = row.getCell(i, Row.RETURN_BLANK_AS_NULL);
                     if(cell == null)    continue;
-                    if(cell.getStringCellValue().trim().equals("企业名称")){
+                    System.out.print(cell.getStringCellValue().trim() + ", ");
+                    if(cell.getStringCellValue().trim().equals("服务对象企业名称")){
                         index[0] = i;
                     }
-                    if(cell.getStringCellValue().trim().equals("联系人")){
+                    if(cell.getStringCellValue().trim().equals("服务对象企业联系人")){
                         index[1] = i;
                     }
-                    if(cell.getStringCellValue().trim().equals("企业介绍")){
+                    if(cell.getStringCellValue().trim().equals("服务对象企业介绍")){
                         index[2] = i;
                     }
-                    if(cell.getStringCellValue().trim().equals("地址")){
+                    if(cell.getStringCellValue().trim().equals("服务对象企业地址")){
                         index[3] = i;
                     }
                     if(cell.getStringCellValue().trim().equals("货物类型")){
                         index[4] = i;
                     }
-                    if(cell.getStringCellValue().trim().equals("合同截止时间")){
+                    if(cell.getStringCellValue().trim().equals("服务合同截止时间")){
                         index[5] = i;
                     }
                 }
+                System.out.println("");
                 System.out.println("index --> " + Arrays.toString(index));
                 String[] data = new String[N];
                 for(int i = st + 1;i < end;++i){
@@ -156,6 +159,7 @@ public class ExcelController extends BaseController{
                             success = false;
                             break;
                         }
+                        System.out.print(cell.getStringCellValue() + ", ");
                         if(j == 5){
                             String date = cell.getStringCellValue().trim();
                             System.out.println("date --> " + date);
@@ -173,6 +177,7 @@ public class ExcelController extends BaseController{
                             data[j] = cell.getStringCellValue().trim();
                         }
                     }
+                    System.out.println("");
                     if(success){
                         ServiceCompanys s = new ServiceCompanys()
                                 .set("qymc", data[0])
@@ -226,17 +231,30 @@ public class ExcelController extends BaseController{
     @Before(GET.class)
     @ActionKey("/api/hwc/excel/out")
     public void out(){
-        String warehouseId = getPara("warehouseId");
-        List<ServiceCompanys> serviceCompanys = ServiceCompanys.getServiceCompanysByWarehouseId(warehouseId);
-        Warehouses w = Warehouses.dao.findById(warehouseId);
-        Samples s = Samples.dao.findById(w.get("sampleId"));
-        String name = s.getStr("jsdwmc") + "-" + w.getStr("hwcmc");
-        createExcel(serviceCompanys, name);
+        String sampleId = getPara("sampleId");
+        Samples sample = Samples.dao.findById(sampleId);
+        User user = User.dao.findById(sample.get("userId"));
+        String tableName = TableNames.hwcServiceCompanys.split(" ")[0];
+        String ids = user.get("warehouseIds") == null ? "-1" : user.getStr("warehouseIds");
+        List<ServiceCompanys> serviceCompanys = ServiceCompanys.dao.find("select * from " + tableName + " " +
+                "where warehouseId in (" + ids + ") ");
+        List<Map<String, Object>> data = new LinkedList<Map<String, Object>>();
+        for(ServiceCompanys serviceCompany : serviceCompanys){
+            Map<String, Object> map = new HashMap<String, Object>();
+            map.putAll(serviceCompany.toRecord().getColumns());
+            map.put("sampleName", sample.getStr("jsdwmc"));
+            Warehouses w = Warehouses.dao.findById(serviceCompany.get("warehouseId"));
+            map.put("warehouseName", w.get("hwcmc"));
+            data.add(map);
+        }
+
+        String name = sample.getStr("jsdwmc");
+        createExcel(data, name);
         String path = PathKit.getWebRootPath() + File.separator + name + ".xls";
         File file = new File(path);
         renderFile(file);
     }
-    private void createExcel(List<ServiceCompanys> serviceCompanys, String name) {
+    private void createExcel(List<Map<String, Object>> serviceCompanys, String name) {
         Workbook wb = new HSSFWorkbook();
         Sheet sheet = wb.createSheet("服务企业名单");
 
@@ -257,25 +275,29 @@ public class ExcelController extends BaseController{
 
         // Create a cell and put a value in it.
         setCell(row.createCell(0), "序号", style);
-        setCell(row.createCell(1), "企业名称", style);
-        setCell(row.createCell(2), "联系人", style);
-        setCell(row.createCell(3), "企业介绍", style);
-        setCell(row.createCell(4), "地址", style);
-        setCell(row.createCell(5), "货物类型", style);
-        setCell(row.createCell(6), "合同截止时间", style);
+        setCell(row.createCell(1), "海外仓建设企业名称", style);
+        setCell(row.createCell(2), "海外仓名称", style);
+        setCell(row.createCell(3), "服务对象企业名称", style);
+        setCell(row.createCell(4), "服务对象企业联系人", style);
+        setCell(row.createCell(5), "服务对象企业介绍", style);
+        setCell(row.createCell(6), "服务对象企业地址", style);
+        setCell(row.createCell(7), "货物类型", style);
+        setCell(row.createCell(8), "服务合同截止时间", style);
 
         for(int i = 0;i < serviceCompanys.size();++i){
-            ServiceCompanys temp = serviceCompanys.get(i);
+            Map<String, Object> temp = serviceCompanys.get(i);
             ///System.out.println(temp.toRecord().getColumns());
             Row r = sheet.createRow(i + 1);
             setCell(r.createCell(0), String.valueOf(i + 1), style);
-            setCell(r.createCell(1), temp.getStr("qymc"), style);
-            setCell(r.createCell(2), temp.getStr("lxr"), style);
-            setCell(r.createCell(3), temp.getStr("qyjs"), style);
-            setCell(r.createCell(4), temp.getStr("dz"), style);
-            setCell(r.createCell(5), temp.getStr("hwlx"), style);
+            setCell(r.createCell(1), getString(temp.get("sampleName")), style);
+            setCell(r.createCell(2), getString(temp.get("warehouseName")), style);
+            setCell(r.createCell(3), getString(temp.get("qymc")), style);
+            setCell(r.createCell(4), getString(temp.get("lxr")), style);
+            setCell(r.createCell(5), getString(temp.get("qyjs")), style);
+            setCell(r.createCell(6), getString(temp.get("dz")), style);
+            setCell(r.createCell(7), getString(temp.get("hwlx")), style);
             SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
-            setCell(r.createCell(6), sf.format(temp.getDate("htjzsj")), style);
+            setCell(r.createCell(8), sf.format((Date)temp.get("htjzsj")), style);
         }
 
         for(int i = 0;i < N;++i) {
@@ -295,6 +317,11 @@ public class ExcelController extends BaseController{
                 e.printStackTrace();
             }
         }
+    }
+
+    public String getString(Object ob){
+        if(ob == null)  return "";
+        return ob.toString();
     }
 
     private void setCell(Cell cell, String value, CellStyle style){

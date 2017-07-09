@@ -160,6 +160,10 @@ public class ReportPlansController extends BaseController{
         if(tableGroupId != null){
             filter += " and " + rp + "tableGroupId = " + tableGroupId + " ";
         }
+        String status = getPara("status");
+        if(status != null){
+            filter += " and " + rp + "status = " + status + " ";
+        }
         if(getPara("callback") != null){
             String json = JsonKit.toJson(ResponseUtil.setRes("00", "获取分页报表计划成功",
                     ReportPlans.getPage(pageNumber, pageSize, oderBy, oder, filter, TableNames.hwcReportPlans + ", " + TableNames.hwcTableGroups )));

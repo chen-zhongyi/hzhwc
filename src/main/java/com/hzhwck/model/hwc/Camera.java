@@ -15,10 +15,10 @@ public class Camera extends Model<Camera> {
     private static final String hc = TableNames.hwcCameras.split(" ")[1] + ".";
 
 
-    public static Page<Camera> getPage(int pageNumber, int pageSize, String orderBy, String order, String filter){
-        StringBuffer sql = new StringBuffer(" from " + tableName + " ");
+    public static Page<Camera> getPage(int pageNumber, int pageSize, String orderBy, String order, String filter, String tables){
+        StringBuffer sql = new StringBuffer(" from " + tables + " ");
         sql.append(filter + " ");
         sql.append(" order by " + orderBy + " " + order);
-        return Camera.dao.paginate(pageNumber, pageSize, "select * ", sql.toString());
+        return Camera.dao.paginate(pageNumber, pageSize, "select " + hc + "* ", sql.toString());
     }
 }

@@ -13,4 +13,6 @@ public class CodeType {
     public static final String paramError = "02";
     //未登录
     public static final String notLogin = "04";
+    //为满足生成评审材料条件
+    public static final String isNotAllowGetPdf = "05";
 }
