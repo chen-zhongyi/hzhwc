@@ -189,6 +189,10 @@ public class ServiceCompanysController extends BaseController {
         if(hwcmc != null){
             filter += " and " + w + "hwcmc like '%" + hwcmc + "%' ";
         }
+        String qymc = getPara("qymc");
+        if(qymc != null){
+            filter += " and " + sc + "qymc like '%" + qymc + "%' ";
+        }
         Page<ServiceCompanys> serviceCompanys = ServiceCompanys.getPage(getParaToInt("pageNumber", 1), getParaToInt("pageSize", 20),
                 sc + "id", "desc", filter,
                 TableNames.hwcSamples + ", " + TableNames.hwcServiceCompanys + ", " +TableNames.hwcWarehouses);

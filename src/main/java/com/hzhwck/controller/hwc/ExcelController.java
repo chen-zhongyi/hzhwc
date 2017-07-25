@@ -6,6 +6,7 @@ import com.hzhwck.model.hwc.Samples;
 import com.hzhwck.model.hwc.ServiceCompanys;
 import com.hzhwck.model.hwc.User;
 import com.hzhwck.model.hwc.Warehouses;
+import com.hzhwck.myEnum.CodeType;
 import com.hzhwck.myEnum.TableNames;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.aop.Before;
@@ -22,8 +23,6 @@ import org.apache.poi.ss.usermodel.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -109,6 +108,8 @@ public class ExcelController extends BaseController{
             return ;
         }
         Workbook wb = null;
+        String[] szd = {"杭州", "省内", "省外", "其他"};
+        String[] fwqx = {"短期", "中期", "长期"};
         try {
             wb = WorkbookFactory.create(excel.getFile());
             for(Sheet sheet : wb){
@@ -122,24 +123,39 @@ public class ExcelController extends BaseController{
                     Cell cell = row.getCell(i, Row.RETURN_BLANK_AS_NULL);
                     if(cell == null)    continue;
                     System.out.print(cell.getStringCellValue().trim() + ", ");
-                    if(cell.getStringCellValue().trim().equals("服务对象企业名称")){
+                    if(cell.getStringCellValue().trim().equals("服务企业名称")){
                         index[0] = i;
                     }
-                    if(cell.getStringCellValue().trim().equals("服务对象企业联系人")){
+                    if(cell.getStringCellValue().trim().equals("联系人")){
                         index[1] = i;
                     }
-                    if(cell.getStringCellValue().trim().equals("服务对象企业介绍")){
+                    if(cell.getStringCellValue().trim().equals("所在地")){
                         index[2] = i;
                     }
-                    if(cell.getStringCellValue().trim().equals("服务对象企业地址")){
+                    if(cell.getStringCellValue().trim().equals("货物类型")){
                         index[3] = i;
                     }
-                    if(cell.getStringCellValue().trim().equals("货物类型")){
+                    if(cell.getStringCellValue().trim().equals("服务期限")){
                         index[4] = i;
                     }
-                    if(cell.getStringCellValue().trim().equals("服务合同截止时间")){
+                    if(cell.getStringCellValue().trim().equals("备注")){
                         index[5] = i;
                     }
+                }
+                boolean isTrue = true;
+                for(int i = 0;i < 6;++i){
+                    if(index[i] == 0){
+                        isTrue = false;
+                    }
+                }
+                if(! isTrue){
+                    if(getPara("callback") != null){
+                        String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，缺少字段，字段包括【服务企业名称，联系人，所在地，货物类型，服务期限，备注】", null));
+                        renderJson(getPara("callback", "default") + "(" + json + ")");
+                    }else {
+                        renderJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，缺少字段，字段包括【服务企业名称，联系人，所在地，货物类型，服务期限，备注】", null));
+                    }
+                    return ;
                 }
                 System.out.println("");
                 System.out.println("index --> " + Arrays.toString(index));
@@ -148,6 +164,18 @@ public class ExcelController extends BaseController{
                     row = sheet.getRow(i);
                     if(row == null) continue;
                     maxNum = Math.max(20, row.getLastCellNum());
+                    boolean isNull = true;
+                    for(int j = 0;j < 6;++j){
+                        if(index[j] >= maxNum)  {
+                            isNull = false;
+                            break;
+                        }
+                        Cell cell = row.getCell(index[j], Row.RETURN_BLANK_AS_NULL);
+                        if(cell != null){
+                            isNull = false;
+                        }
+                    }
+                    if(isNull)  continue;
                     boolean success = true;
                     for(int j = 0;j < 6;++j){
                         if(index[j] >= maxNum)  {
@@ -155,37 +183,77 @@ public class ExcelController extends BaseController{
                             break;
                         }
                         Cell cell = row.getCell(index[j], Row.RETURN_BLANK_AS_NULL);
-                        if(cell == null){
-                            success = false;
-                            break;
-                        }
-                        System.out.print(cell.getStringCellValue() + ", ");
-                        if(j == 5){
-                            String date = cell.getStringCellValue().trim();
-                            System.out.println("date --> " + date);
-                            SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
-                            sf.setLenient(false);
-                            try {
-                                sf.parse(date);
-                                data[j] = date;
-                            }catch (ParseException e){
-                                e.printStackTrace();
-                                success = false;
-                                break;
+                        if (j == 5) {
+                            if (cell == null)
+                                data[j] = "";
+                            else {
+                                CellType type = cell.getCellTypeEnum();
+                                if(type == CellType.STRING) {
+                                    data[j] = cell.getStringCellValue().trim();
+                                }else {
+                                    if(getPara("callback") != null){
+                                        String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，【备注】只能是字符类型", null));
+                                        renderJson(getPara("callback", "default") + "(" + json + ")");
+                                    }else {
+                                        renderJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，只能是字符类型", null));
+                                    }
+                                    return ;
+                                }
                             }
-                        }else {
-                            data[j] = cell.getStringCellValue().trim();
+                        } else {
+                            if (cell == null) {
+                                if(getPara("callback") != null){
+                                    String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，【服务企业名称，联系人，所在地，货物类型，服务期限】不能为空", null));
+                                    renderJson(getPara("callback", "default") + "(" + json + ")");
+                                }else {
+                                    renderJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，【服务企业名称，联系人，所在地，货物类型，服务期限】不能为空", null));
+                                }
+                                return ;
+                            }
+                            CellType type = cell.getCellTypeEnum();
+                            if(type == CellType.STRING) {
+                                data[j] = cell.getStringCellValue().trim();
+                                boolean flag = false;
+                                if(j == 2){
+                                    for(int k = 0;k < szd.length;++k)if(data[j].equals(szd[k])){
+                                        flag = true;
+                                    }
+                                }else if(j == 4){
+                                    for(int k = 0;k < fwqx.length;++k)if(data[j].equals(fwqx[k])){
+                                        flag = true;
+                                    }
+                                }else
+                                    flag = true;
+                                if(! flag){
+                                    if(getPara("callback") != null){
+                                        String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，【所在地的值只能是{杭州，省内，省外，其他}，服务期限的值只能是{短期，中期，长期}】不能为空", null));
+                                        renderJson(getPara("callback", "default") + "(" + json + ")");
+                                    }else {
+                                        renderJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，【所在地的值只能是{杭州，省内，省外，其他}，服务期限的值只能是{短期，中期，长期}】不能为空", null));
+                                    }
+                                    return ;
+                                }
+                            }else {
+                                if(getPara("callback") != null){
+                                    String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，【服务企业名称，联系人，所在地，货物类型，服务期限】不能为空", null));
+                                    renderJson(getPara("callback", "default") + "(" + json + ")");
+                                }else {
+                                    renderJson(ResponseUtil.setRes(CodeType.paramError, "单元格格式出错，【服务企业名称，联系人，所在地，货物类型，服务期限】不能为空", null));
+                                }
+                                return ;
+                            }
                         }
+                        System.out.print(data[j] + ", ");
                     }
                     System.out.println("");
                     if(success){
                         ServiceCompanys s = new ServiceCompanys()
                                 .set("qymc", data[0])
                                 .set("lxr", data[1])
-                                .set("qyjs", data[2])
-                                .set("dz", data[3])
-                                .set("hwlx", data[4])
-                                .set("htjzsj", data[5])
+                                .set("szd", data[2])
+                                .set("hwlx", data[3])
+                                .set("fwqx", data[4])
+                                .set("bz", data[5])
                                 .set("warehouseId", warehouseId);
                         System.out.println("isExist --> " + ServiceCompanys.isExist(s));
                         if(ServiceCompanys.isExist(s) == true)  continue;
@@ -250,7 +318,7 @@ public class ExcelController extends BaseController{
 
         String name = sample.getStr("jsdwmc");
         createExcel(data, name);
-        String path = PathKit.getWebRootPath() + File.separator + name + ".xls";
+        String path = PathKit.getWebRootPath() + File.separator  + "excel" + File.separator + name + ".xls";
         File file = new File(path);
         renderFile(file);
     }
@@ -275,14 +343,14 @@ public class ExcelController extends BaseController{
 
         // Create a cell and put a value in it.
         setCell(row.createCell(0), "序号", style);
-        setCell(row.createCell(1), "海外仓建设企业名称", style);
-        setCell(row.createCell(2), "海外仓名称", style);
-        setCell(row.createCell(3), "服务对象企业名称", style);
-        setCell(row.createCell(4), "服务对象企业联系人", style);
-        setCell(row.createCell(5), "服务对象企业介绍", style);
-        setCell(row.createCell(6), "服务对象企业地址", style);
-        setCell(row.createCell(7), "货物类型", style);
-        setCell(row.createCell(8), "服务合同截止时间", style);
+        setCell(row.createCell(1), "建设企业名称", style);
+        setCell(row.createCell(2), "海外仓", style);
+        setCell(row.createCell(3), "服务企业名称", style);
+        setCell(row.createCell(4), "联系人", style);
+        setCell(row.createCell(5), "所在地", style);
+        setCell(row.createCell(6), "货物类型", style);
+        setCell(row.createCell(7), "服务期限", style);
+        setCell(row.createCell(8), "备注", style);
 
         for(int i = 0;i < serviceCompanys.size();++i){
             Map<String, Object> temp = serviceCompanys.get(i);
@@ -293,11 +361,10 @@ public class ExcelController extends BaseController{
             setCell(r.createCell(2), getString(temp.get("warehouseName")), style);
             setCell(r.createCell(3), getString(temp.get("qymc")), style);
             setCell(r.createCell(4), getString(temp.get("lxr")), style);
-            setCell(r.createCell(5), getString(temp.get("qyjs")), style);
-            setCell(r.createCell(6), getString(temp.get("dz")), style);
-            setCell(r.createCell(7), getString(temp.get("hwlx")), style);
-            SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
-            setCell(r.createCell(8), sf.format((Date)temp.get("htjzsj")), style);
+            setCell(r.createCell(5), getString(temp.get("szd")), style);
+            setCell(r.createCell(6), getString(temp.get("hwlx")), style);
+            setCell(r.createCell(7), getString(temp.get("fwqx")), style);
+            setCell(r.createCell(8), getString(temp.get("bz")), style);
         }
 
         for(int i = 0;i < N;++i) {
@@ -306,7 +373,7 @@ public class ExcelController extends BaseController{
         FileOutputStream fileOut = null;
         try {
             // Write the output to a file
-            fileOut = new FileOutputStream(PathKit.getWebRootPath() + File.separator + name + ".xls");
+            fileOut = new FileOutputStream(PathKit.getWebRootPath() + File.separator + "excel" + File.separator + name + ".xls");
             wb.write(fileOut);
         }catch (IOException e){
             e.printStackTrace();

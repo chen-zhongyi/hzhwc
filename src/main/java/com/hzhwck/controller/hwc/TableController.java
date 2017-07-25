@@ -425,7 +425,7 @@ public class TableController extends BaseController{
         }else if(tableId.equals("3")){
             String t = TableNames.hwcTable3.split(" ")[1] + ".";
             SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM");
-            List<Record> records = Db.find("select " + s + "ssqx, sum(ht3.fwxyysr) as fwxyysr, sum(ht3.ckddlzyms) as ckddlzyms, sum(ht3.byljckz) as byljckz, sum(ht3.fwqysl) as fwqysl, sum(ht3.ckgztr) as ckgztr, sum(ht3.qmcyrs) as qmcyrs, sum(ht3.gwry) as gwry, sum(ht3.qmcyryqt) as qmcyryqt, sum(ht3.hzqy) as hzqy, sum(ht3.zjmj) as zjmj, sum(ht3.reportId) as reportId, sum(ht3.ckzltr) as ckzltr, sum(ht3.ygxc) as ygxc, sum(ht3.id) as id, sum(ht3.tc) as tc, sum(ht3.ytrsymj) as ytrsymj, sum(ht3.ljjstzeqt) as ljjstzeqt, sum(ht3.ckz) as ckz, sum(ht3.ckddlbhms) as ckddlbhms, sum(ht3.xssr) as xssr, sum(ht3.zyxs) as zyxs, sum(ht3.xymj) as xymj, sum(ht3.sbgztr) as sbgztr, sum(ht3.rkddlbhms) as rkddlbhms, sum(ht3.hyqys) as hyqys, sum(ht3.ljjstze) as ljjstze, sum(ht3.glry) as glry, sum(ht3.rkddlzyms) as rkddlzyms, sum(ht3.gnry) as gnry, sum(ht3.fwxyysrqt) as fwxyysrqt, sum(ht3.jsry) as jsry, sum(ht3.byljrkz) as byljrkz, sum(ht3.yyxsr) as yyxsr, sum(ht3.cc) as cc, sum(ht3.ps) as ps, sum(ht3.qmzkhz) as qmzkhz " +
+            List<Record> records = Db.find("select " + s + "ssqx, sum(ht3.ckddlzyms) as ckddlzyms, sum(ht3.byljckz) as byljckz, sum(ht3.fwqysl) as fwqysl, sum(ht3.ckgztr) as ckgztr, sum(ht3.qmcyrs) as qmcyrs, sum(ht3.gwry) as gwry, sum(ht3.qmcyryqt) as qmcyryqt, sum(ht3.hzqy) as hzqy, sum(ht3.zjmj) as zjmj, sum(ht3.reportId) as reportId, sum(ht3.ckzltr) as ckzltr, sum(ht3.ygxc) as ygxc, sum(ht3.id) as id, sum(ht3.ytrsymj) as ytrsymj, sum(ht3.ljjstzeqt) as ljjstzeqt, sum(ht3.ckz) as ckz, sum(ht3.ckddlbhms) as ckddlbhms, sum(ht3.xssr) as xssr, sum(ht3.zyxs) as zyxs, sum(ht3.xymj) as xymj, sum(ht3.sbgztr) as sbgztr, sum(ht3.rkddlbhms) as rkddlbhms, sum(ht3.hyqys) as hyqys, sum(ht3.ljjstze) as ljjstze, sum(ht3.rkddlzyms) as rkddlzyms, sum(ht3.gnry) as gnry, sum(ht3.jsry) as jsry, sum(ht3.byljrkz) as byljrkz, sum(ht3.qmzkhz) as qmzkhz, sum(ht3.rkhwzl) as rkhwzl, sum(ht3.ckhwzl) as ckhwzl, sum(ht3.qmzkhwzl) as qmzkhwzl " +
                     "from " + TableNames.hwcReports + ", " + TableNames.hwcTable3 + ", " + TableNames.hwcSamples + ", " + TableNames.hwcReportPlans + " " +
                     "where " + r + "sampleId = " + s + "id and " + r + "tableId = 3 and " + r + "status = 5 and " + r + "tableReportId = " + t + "id " + " " +
                     "and " + p + "id = " + r + "planId and DATE_FORMAT(" + p + "round, '%Y-%m') = '" + sf.format(date) + "' " +
@@ -455,18 +455,18 @@ public class TableController extends BaseController{
             data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
             data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
         }else if(type.equals("3")){
-            String[] names = {"ckz", "yyxsr", "fwxyysr", "xssr"};
+            String[] names = {"ckz", "yyxsr", "xssr"};
             data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
             data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
             data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), names));
             data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), names));
-        }else if(type.equals("4")){
+        }/*else if(type.equals("4")){
             String[] names = {"fwxyysr", "cc", "tc", "ps", "fwxyysrqt"};
             data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
             data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
             data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), names));
             data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), names));
-        }else if(type.equals("5")){
+        }*/else if(type.equals("5")){
             String[] names = {"xssr", "zyxs"};
             data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
             data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
@@ -479,7 +479,7 @@ public class TableController extends BaseController{
             data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), names));
             data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), names));
         }else if(type.equals("7")){
-            String[] names = {"byljrkz", "byljckz", "qmzkhz"};
+            String[] names = {"byljrkz", "byljckz", "qmzkhz", "qmzkhwzl", "rkhwzl", "ckhwzl"};
             data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
             data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
             String[] temp = {"byljrkz", "byljckz"};
@@ -496,7 +496,7 @@ public class TableController extends BaseController{
             data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), names));
             data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), names));
         }else if(type.equals("10")){
-            String[] names = {"qmcyrs", "gnry", "gwry", "jsry", "glry", "qmcyryqt"};
+            String[] names = {"qmcyrs", "gnry", "gwry", "jsry", "qmcyryqt"};
             data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
             data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
         }
@@ -520,11 +520,11 @@ public class TableController extends BaseController{
         Map<String, String> map = new HashMap<String, String>();
         map.put("1", "海外仓数量与面积分析");
         map.put("2", "海外仓建设投入情况分析");
-        map.put("3", "海外仓出口额与营业收入分析 ");
-        map.put("4", "海外仓服务收入结构分析");
+        map.put("3", "海外仓收入情况分析");
+        //map.put("4", "海外仓服务收入结构分析");
         map.put("5", "海外仓销售收入结构分析");
         map.put("6", "海外仓订单处理量分析");
-        map.put("7", "海外仓或物质分析");
+        map.put("7", "海外仓货物值分析");
         map.put("8", "海外仓服务对象企业分析");
         map.put("9", "海外仓薪酬分析");
         map.put("10", "海外仓人员构成分析");

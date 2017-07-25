@@ -70,6 +70,28 @@ public class ImageController extends BaseController{
     @ActionKey("/api/hwc/images/add")
     public void add(){
         UploadFile image = getFile("image");
+        //2、创建一个文件上传解析器
+        //DiskFileItemFactory factory = new DiskFileItemFactory();
+        //2、创建一个文件上传解析器
+        //ServletFileUpload upload = new ServletFileUpload(factory);
+        /*HttpServletRequest request = getRequest();
+
+        try {
+            InputStream in = request.getInputStream();
+            OutputStream out = new FileOutputStream(PathKit.getWebRootPath() + File.separator + "hwckimages" +
+                File.separator + "image.jpg");
+            byte[] a = new byte[1000];
+            int len;
+            while((len = in.read()) != -1){
+                out.write(a, 0, len);
+            }
+            out.close();
+            in.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }*/
+        //File image = new File(PathKit.getWebRootPath() + File.separator + "hwcimages" +
+        //        File.separator + "image.jpg");
         String imageName = image.getFileName();
         String suffix = imageName.substring(imageName.lastIndexOf('.')).toLowerCase();
         File tempFile = new File(image.getUploadPath() + File.separator + image.getFileName());

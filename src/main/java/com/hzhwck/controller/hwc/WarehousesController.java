@@ -77,6 +77,7 @@ public class WarehousesController extends BaseController{
         Map<String, Object> loginUser = getSessionAttr("user");
         User user = User.dao.findById(loginUser.get("hwcUserId"));
         warehouses.set("sampleId", user.get("sampleId"));
+        //warehouses.set("status", 1);
         if(warehouses.save() == false){
             if(getPara("callback") != null){
                 String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.dataBaseError, "添加海外仓库失败，数据库异常", null));
@@ -229,8 +230,11 @@ public class WarehousesController extends BaseController{
         filter = " where " + s + "id = " + w + "sampleId ";
         Map<String, Object> loginUser = getSessionAttr("user");
         if(loginUser.get("type").toString().equals(HwcUserType.sample)){
-            String ids = (String) loginUser.get("warehouseIds");
-            if(ids == null) ids = "-1";
+            Object ids = loginUser.get("warehouseIds");
+            String xx;
+            if(ids == null) xx = "-1";
+            else
+                xx = ids.toString();
             filter += " and " + w + "id in(" + ids + ") ";
         }else if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
             filter += " and " + s + "ssqx = '" + loginUser.get("areaCode") + "' ";

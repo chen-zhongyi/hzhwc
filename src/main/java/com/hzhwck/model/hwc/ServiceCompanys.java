@@ -19,14 +19,37 @@ public class ServiceCompanys extends Model<ServiceCompanys> {
     }
 
     public static boolean isExist(ServiceCompanys s){
-        return ServiceCompanys.dao.findFirst("select * from " + tableName
-                + " where qymc = '" + s.get("qymc") + "' "
-                + " and lxr = '" + s.get("lxr") + "' "
-                + " and qyjs = '" + s.get("qyjs") + "' "
-                + " and dz = '" + s.get("dz") + "' "
-                + " and hwlx = '" + s.get("hwlx") + "' "
-                + " and htjzsj = '" + s.get("htjzsj") + "' "
-                + " and warehouseId = " + s.get("warehouseId")) != null;
+        String sql = "";
+        Object bz = s.get("bz");
+        if(bz != null){
+            if(bz.toString().equals(""))    {
+                sql = "select * from " + tableName
+                        + " where qymc = '" + s.get("qymc") + "' "
+                        + " and lxr = '" + s.get("lxr") + "' "
+                        + " and szd = '" + s.get("szd") + "' "
+                        + " and hwlx = '" + s.get("hwlx") + "' "
+                        + " and fwqx = '" + s.get("fwqx") + "' "
+                        + " and warehouseId = " + s.get("warehouseId");
+            }else {
+                sql = "select * from " + tableName
+                        + " where qymc = '" + s.get("qymc") + "' "
+                        + " and lxr = '" + s.get("lxr") + "' "
+                        + " and szd = '" + s.get("szd") + "' "
+                        + " and hwlx = '" + s.get("hwlx") + "' "
+                        + " and fwqx = '" + s.get("fwqx") + "' "
+                        + " and bz = '" + s.get("bz") + "' "
+                        + " and warehouseId = " + s.get("warehouseId");
+            }
+        }else {
+            sql = "select * from " + tableName
+                    + " where qymc = '" + s.get("qymc") + "' "
+                    + " and lxr = '" + s.get("lxr") + "' "
+                    + " and szd = '" + s.get("szd") + "' "
+                    + " and hwlx = '" + s.get("hwlx") + "' "
+                    + " and fwqx = '" + s.get("fwqx") + "' "
+                    + " and warehouseId = " + s.get("warehouseId");
+        }
+        return ServiceCompanys.dao.findFirst(sql) != null;
     }
 
     public static Page<ServiceCompanys> getPage(int pageNumber, int pageSize, String oderBy, String oder, String filter, String tables){

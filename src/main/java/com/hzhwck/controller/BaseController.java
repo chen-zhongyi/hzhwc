@@ -126,7 +126,7 @@ public class BaseController extends Controller {
                 }
             }
         }
-        return result.toString();
+        return result.toString().replaceAll(" ", "%20");
     }
 
     private String r = TableNames.hwcReports.split(" ")[1] + ".";

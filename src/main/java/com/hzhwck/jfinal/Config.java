@@ -10,9 +10,13 @@ import com.hzhwck.interceptor.CrossGlobleInterceptor;
 import com.hzhwck.interceptor.LoggerGlobalInterceptor;
 import com.hzhwck.interceptor.LoginInterceptor;
 import com.hzhwck.model.hwc.*;
-import com.hzhwck.model.system.*;
+import com.hzhwck.model.system.Account;
+import com.hzhwck.model.system.Menu;
+import com.hzhwck.model.system.Rights;
+import com.hzhwck.model.system.UserSystem;
 import com.jfinal.config.*;
 import com.jfinal.core.Const;
+import com.jfinal.ext.handler.UrlSkipHandler;
 import com.jfinal.kit.Prop;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
@@ -64,6 +68,7 @@ public class Config extends JFinalConfig {
         me.add("/api/hwc/videos", VideoController.class);
         me.add("/api/hwc/cameras", CameraController.class);
         me.add("/api/hwc/pdf", PDFController.class);
+        me.add("/api/hwc/cameras2", Camera2Controller.class);
     }
     public void configEngine(Engine me) {}
     public void configPlugin(Plugins me) {
@@ -105,11 +110,14 @@ public class Config extends JFinalConfig {
         arp.addMapping("hwc_system", Systems.class);
         arp.addMapping("hwc_cameras", Camera.class);
         arp.addMapping("hwc_pdf", Pdf.class);
+        arp.addMapping("hwc_video", Camera2.class);
     }
     public void configInterceptor(Interceptors me) {
         me.addGlobalActionInterceptor(new LoggerGlobalInterceptor());
         me.add(new CrossGlobleInterceptor());
         me.add(new LoginInterceptor());
     }
-    public void configHandler(Handlers me) {}
+    public void configHandler(Handlers me) {
+        me.add(new UrlSkipHandler("/api/simpleFileupload", false));
+    }
 }

@@ -46,4 +46,6 @@ public class TableNames {
     public static final String hwcTables = "hwc_tables hts";
 
     public static final String hwcCameras = "hwc_cameras hca";
+
+    public static final String hwcCameras2 = "hwc_video hca2";
 }

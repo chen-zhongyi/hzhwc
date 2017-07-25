@@ -21,8 +21,8 @@ public class SamplesController extends BaseController {
         if(getRequest().getMethod().equals("POST")){
             if(getPara(0) == null) {
                 System.out.println("[POST] add");
-                //forwardAction("/api/hwc/samples/add");
-                redirect("/api/hwc/samples/add" + "?" + getParam());
+                forwardAction("/api/hwc/samples/add");
+                //redirect("/api/hwc/samples/add" + "?" + getParam());
                 success = true;
             }
         }else if(getRequest().getMethod().equals("GET")){

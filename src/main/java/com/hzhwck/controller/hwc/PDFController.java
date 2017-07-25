@@ -19,6 +19,7 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Record;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -84,6 +85,11 @@ public class PDFController extends BaseController{
                     .set("path", File.separator + "pdfs" + File.separator + name);
             pdf.save();
         }else {
+            String tempPath = p.get("path");
+            if(tempPath != null){
+                File tempFile = new File(PathKit.getWebRootPath() + tempPath);
+                tempFile.delete();
+            }
             p.set("content", data);
             p.set("path", File.separator + "pdfs" + File.separator + name);
             p.update();
@@ -103,7 +109,12 @@ public class PDFController extends BaseController{
     @ActionKey("/api/hwc/pdf/download")
     public void download(){
         String path = getPara("path");
-        renderFile(new File(PathKit.getWebRootPath() + path));
+        File file = new File(PathKit.getWebRootPath() + path);
+        if(file.exists()) {
+            renderFile(file);
+        }else {
+            renderFile(new File(PathKit.getWebRootPath() + File.separator + "pdfs" + File.separator + "说明.pdf"));
+        }
     }
 
     private Map<String, Object> getData(String warehouseId){
@@ -119,10 +130,10 @@ public class PDFController extends BaseController{
         warehouse.put("country", Country.getByCode(warehouse.getStr("hwcssgj")));
         data.put("warehouse", warehouse);
         Pdf record = Pdf.getPdfByWarehouseId(warehouseId);
-        data.put("path", record.get("path"));
         if(record == null)
             data.put("data", null);
         else{
+            data.put("path", record.get("path"));
             try {
                 Map<String, Object> temp = new Gson().fromJson(record.getStr("content"), new TypeToken<Map<String, Object>>() {}.getType());
                 data.put("data", temp);
@@ -176,7 +187,7 @@ public class PDFController extends BaseController{
         data.put("table2", records.get(0));
 
         sf = new SimpleDateFormat("yyyy-MM");
-        records = Db.find("select " + "sum(" + t3 + "xymj) as xymj, sum(" + t3 + "ytrsymj) as ytrsymj, sum(" + t3 + "zjmj) as zjmj, sum(" + t3 + "ljjstze) as ljjstze, sum(" + t3 + "sbgztr) as sbgztr, sum(" + t3 + "ckzltr) as ckzltr, sum(" + t3 + "ckgztr) as ckgztr, sum(" + t3 + "ljjstzeqt) as ljjstzeqt, sum(" + t3 + "ckz) as ckz, sum(" + t3 + "yyxsr) as yyxsr, sum(" + t3 + "fwxyysr) as fwxyysr, sum(" + t3 + "tc) as tc, sum(" + t3 + "cc) as cc, sum(" + t3 + "ps) as ps, sum(" + t3 + "fwxyysrqt) as fwxyysrqt, sum(" + t3 + "xssr) as xssr, sum(" + t3 + "zyxs) as zyxs, sum(" + t3 + "rkddlbhms) as rkddlbhms, sum(" + t3 + "rkddlzyms) as rkddlzyms, sum(" + t3 + "ckddlbhms) as ckddlbhms, sum(" + t3 + "ckddlzyms) as ckddlzyms, sum(" + t3 + "byljrkz) as byljrkz, sum(" + t3 + "byljckz) as byljckz, sum(" + t3 + "qmzkhz) as qmzkhz, sum(" + t3 + "fwqysl) as fwqysl, sum(" + t3 + "hzqy) as hzqy, sum(" + t3 + "hyqys) as hyqys, sum(" + t3 + "qmcyrs) as qmcyrs, sum(" + t3 + "gnry) as gnry, sum(" + t3 + "gwry) as gwry, sum(" + t3 + "jsry) as jsry, sum(" + t3 + "glry) as glry, sum(" + t3 + "qmcyryqt) as qmcyryqt, sum(" + t3 + "ygxc) as ygxc from " + "" +
+        records = Db.find("select " + "sum(" + t3 + "xymj) as xymj, sum(" + t3 + "ytrsymj) as ytrsymj, sum(" + t3 + "zjmj) as zjmj, sum(" + t3 + "ljjstze) as ljjstze, sum(" + t3 + "sbgztr) as sbgztr, sum(" + t3 + "ckzltr) as ckzltr, sum(" + t3 + "ckgztr) as ckgztr, sum(" + t3 + "ljjstzeqt) as ljjstzeqt, sum(" + t3 + "ckz) as ckz, sum(" + t3 + "yyxsr) as yyxsr, sum(" + t3 + "xssr) as xssr, sum(" + t3 + "zyxs) as zyxs, sum(" + t3 + "rkddlbhms) as rkddlbhms, sum(" + t3 + "rkddlzyms) as rkddlzyms, sum(" + t3 + "ckddlbhms) as ckddlbhms, sum(" + t3 + "ckddlzyms) as ckddlzyms, sum(" + t3 + "byljrkz) as byljrkz, sum(" + t3 + "byljckz) as byljckz, sum(" + t3 + "qmzkhz) as qmzkhz, sum(" + t3 + "fwqysl) as fwqysl, sum(" + t3 + "hzqy) as hzqy, sum(" + t3 + "hyqys) as hyqys, sum(" + t3 + "qmcyrs) as qmcyrs, sum(" + t3 + "gnry) as gnry, sum(" + t3 + "gwry) as gwry, sum(" + t3 + "jsry) as jsry, sum(" + t3 + "qmcyryqt) as qmcyryqt, sum(" + t3 + "ygxc) as ygxc, sum(" + t3 + "yxry) as yxry, sum(" + t3 + "rkhwzl) as rkhwzl, sum(" + t3 + "ckhwzl) as ckhwzl, sum(" + t3 + "qmzkhwzl) as qmzkhwzl from " + "" +
                 TableNames.hwcReports + ", " + TableNames.hwcReportPlans + ", " + TableNames.hwcWarehouses + ", " + TableNames.hwcTable3 + " " +
                 "where " + r + "status = 5 and " + r + "tableId = 3 and " + w + "id = " + warehouseId + " and " + r + "warehouseId = " + w + "id and " + r + "tableReportId = " + t3 + "id " +
                 "and " + r + "planId = " + p + "id and DATE_FORMAT(" + p + "round, '%Y-%m') = '" + sf.format(date) + "'");
@@ -190,7 +201,7 @@ public class PDFController extends BaseController{
             return null;
         }
         data.put("month", records.get(0));
-        records = Db.find("select " + "sum(" + t3 + "xymj) as xymj, sum(" + t3 + "ytrsymj) as ytrsymj, sum(" + t3 + "zjmj) as zjmj, sum(" + t3 + "ljjstze) as ljjstze, sum(" + t3 + "sbgztr) as sbgztr, sum(" + t3 + "ckzltr) as ckzltr, sum(" + t3 + "ckgztr) as ckgztr, sum(" + t3 + "ljjstzeqt) as ljjstzeqt, sum(" + t3 + "ckz) as ckz, sum(" + t3 + "yyxsr) as yyxsr, sum(" + t3 + "fwxyysr) as fwxyysr, sum(" + t3 + "tc) as tc, sum(" + t3 + "cc) as cc, sum(" + t3 + "ps) as ps, sum(" + t3 + "fwxyysrqt) as fwxyysrqt, sum(" + t3 + "xssr) as xssr, sum(" + t3 + "zyxs) as zyxs, sum(" + t3 + "rkddlbhms) as rkddlbhms, sum(" + t3 + "rkddlzyms) as rkddlzyms, sum(" + t3 + "ckddlbhms) as ckddlbhms, sum(" + t3 + "ckddlzyms) as ckddlzyms, sum(" + t3 + "byljrkz) as byljrkz, sum(" + t3 + "byljckz) as byljckz, sum(" + t3 + "qmzkhz) as qmzkhz, sum(" + t3 + "fwqysl) as fwqysl, sum(" + t3 + "hzqy) as hzqy, sum(" + t3 + "hyqys) as hyqys, sum(" + t3 + "qmcyrs) as qmcyrs, sum(" + t3 + "gnry) as gnry, sum(" + t3 + "gwry) as gwry, sum(" + t3 + "jsry) as jsry, sum(" + t3 + "glry) as glry, sum(" + t3 + "qmcyryqt) as qmcyryqt, sum(" + t3 + "ygxc) as ygxc from " + "" +
+        records = Db.find("select " + "sum(" + t3 + "xymj) as xymj, sum(" + t3 + "ytrsymj) as ytrsymj, sum(" + t3 + "zjmj) as zjmj, sum(" + t3 + "ljjstze) as ljjstze, sum(" + t3 + "sbgztr) as sbgztr, sum(" + t3 + "ckzltr) as ckzltr, sum(" + t3 + "ckgztr) as ckgztr, sum(" + t3 + "ljjstzeqt) as ljjstzeqt, sum(" + t3 + "ckz) as ckz, sum(" + t3 + "yyxsr) as yyxsr, sum(" + t3 + "xssr) as xssr, sum(" + t3 + "zyxs) as zyxs, sum(" + t3 + "rkddlbhms) as rkddlbhms, sum(" + t3 + "rkddlzyms) as rkddlzyms, sum(" + t3 + "ckddlbhms) as ckddlbhms, sum(" + t3 + "ckddlzyms) as ckddlzyms, sum(" + t3 + "byljrkz) as byljrkz, sum(" + t3 + "byljckz) as byljckz, sum(" + t3 + "qmzkhz) as qmzkhz, sum(" + t3 + "fwqysl) as fwqysl, sum(" + t3 + "hzqy) as hzqy, sum(" + t3 + "hyqys) as hyqys, sum(" + t3 + "qmcyrs) as qmcyrs, sum(" + t3 + "gnry) as gnry, sum(" + t3 + "gwry) as gwry, sum(" + t3 + "jsry) as jsry, sum(" + t3 + "qmcyryqt) as qmcyryqt, sum(" + t3 + "ygxc) as ygxc, sum(" + t3 + "yxry) as yxry, sum(" + t3 + "rkhwzl) as rkhwzl, sum(" + t3 + "ckhwzl) as ckhwzl, sum(" + t3 + "qmzkhwzl) as qmzkhwzl from " + "" +
                 TableNames.hwcReports + ", " + TableNames.hwcReportPlans + ", " + TableNames.hwcWarehouses + ", " + TableNames.hwcTable3 + " " +
                 "where " + r + "status = 5 and " + r + "tableId = 3 and " + w + "id = " + warehouseId + " and " + r + "warehouseId = " + w + "id and " + r + "tableReportId = " + t3 + "id " +
                 "and " + r + "planId = " + p + "id and DATE_FORMAT(" + p + "round, '%Y-%m') >= '" + sf.format(TimeUtil.getYearFirstMonthTime()) + "' " +

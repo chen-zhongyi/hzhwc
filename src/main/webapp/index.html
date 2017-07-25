@@ -1,10 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    <h1>hello word !</h1>
-</body>
+	<head>
+		<meta charset="utf-8" />
+		<title>杭州市公共海外仓管理信息系统</title>
+		<meta name="description" content="" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!-- basic styles -->
+		<link href="css/bootstrap.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="css/font-awesome.min.css" />
+		<!--[if IE 7]>
+		  <link rel="stylesheet" href="css/font-awesome-ie7.min.css" />
+		<![endif]-->
+
+		<!-- page specific plugin styles -->
+
+		<!-- fonts -->
+
+		<!--<link rel="stylesheet" href="css/ace-fonts.css" />-->
+
+		<!-- ace styles -->
+
+		<link rel="stylesheet" href="css/ace.min.css" />
+		<link rel="stylesheet" href="css/ace-rtl.min.css" />
+		<link rel="stylesheet" href="css/ace-skins.min.css" />
+		<link rel="stylesheet" href="css/style.css?v=4" />
+		<link rel="stylesheet" href="css/laydate.css" />
+		<link rel="stylesheet" href="css/video-js.min.css" />
+
+		<!--[if lte IE 8]>
+		  <link rel="stylesheet" href="css/ace-ie.min.css" />
+		<![endif]-->
+
+        <script type="text/javascript">
+            var console = console || {log: function () {return false;}};
+            if (!Function.prototype.bind) {
+                Function.prototype.bind = function(oThis) {
+                    if (typeof this !== 'function') {
+                        throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+                    }
+                    var aArgs   = Array.prototype.slice.call(arguments, 1),
+                        fToBind = this,
+                        fNOP    = function() {},
+                        fBound  = function() {
+                            return fToBind.apply(this instanceof fNOP
+                                    ? this
+                                    : oThis,
+                                aArgs.concat(Array.prototype.slice.call(arguments)));
+                        };
+                    if (this.prototype) {
+                        fNOP.prototype = this.prototype;
+                    }
+                    fBound.prototype = new fNOP();
+                    return fBound;
+                };
+            }
+        </script>
+        <!--[if lt IE 8]>
+        <script src="/js/libs/json2.js"></script>
+        <script type="text/javascript">
+            alert('您的浏览器版本太旧，请更新到新版本的IE或使用谷歌浏览器等标准浏览器')
+        </script>
+        <![endif]-->
+		<!-- inline styles related to this page -->
+
+		<!-- ace settings handler -->
+
+		<!--<script src="js/ace-extra.min.js"></script>-->
+
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<script src="js/respond.min.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+        <div id="container"></div>
+		<script type="text/javascript">
+			if("ontouchend" in document) document.write("<script src='js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
+		</script>
+        <script src="js/libs/require.js" data-main="js/main.js?_=19"></script>
+	</body>
 </html>
