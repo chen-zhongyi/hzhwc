@@ -155,6 +155,8 @@ public class SamplesController extends BaseController {
             if(ssqx != null){
                 filter = " where ssqx='" + ssqx + "' ";
             }
+        }else if(loginUser.get("type").toString().equals(HwcUserType.yqadmin)){
+            filter = " where ssyq = '" + loginUser.get("yqCode") + "' ";
         }
 
         String shtyxydm = getPara("shtyxydm");

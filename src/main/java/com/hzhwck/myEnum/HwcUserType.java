@@ -10,4 +10,6 @@ public class HwcUserType {
     public static final String qxAdmin = "1";
     //企业用户
     public static final String sample = "2";
+    //园区用户
+    public static final String yqadmin = "3";
 }

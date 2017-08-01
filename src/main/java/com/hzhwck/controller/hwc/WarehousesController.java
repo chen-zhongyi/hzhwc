@@ -243,6 +243,8 @@ public class WarehousesController extends BaseController{
             if(ssqx != null){
                 filter += " and " + s + "ssqx = '" + ssqx + "' ";
             }
+        }else if(loginUser.get("type").toString().equals(HwcUserType.yqadmin)){
+            filter += " and " + s + "ssyq = '" + loginUser.get("yqCode") + "' ";
         }
 
         String country = getPara("country");

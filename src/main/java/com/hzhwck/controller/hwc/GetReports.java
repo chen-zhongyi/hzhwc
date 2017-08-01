@@ -44,6 +44,10 @@ public class GetReports extends BaseController{
         if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
             areaCode = (String) loginUser.get("areaCode");
         }
+        String yqCode = getPara("yqCode");
+        if(loginUser.get("type").toString().equals(HwcUserType.yqadmin)){
+            yqCode = (String) loginUser.get("yqCode");
+        }
         String status = getPara("status");
         int pageNumber = getParaToInt("pageNumber", 1);
         int pageSize = getParaToInt("pageSize", 20);
@@ -67,6 +71,9 @@ public class GetReports extends BaseController{
         }
         if(areaCode != null){
             sampleFilter += " and s.ssqx = '" + areaCode + "' ";
+        }
+        if(yqCode != null){
+            sampleFilter += " and s.ssyq = '" + yqCode + "' ";
         }
 
         SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM");

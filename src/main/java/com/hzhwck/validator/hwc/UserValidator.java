@@ -2,8 +2,10 @@ package com.hzhwck.validator.hwc;
 
 
 import com.hzhwck.model.hwc.Area;
+import com.hzhwck.model.hwc.Yuanqu;
 import com.hzhwck.model.system.Account;
 import com.hzhwck.myEnum.CodeType;
+import com.hzhwck.myEnum.HwcUserType;
 import com.hzhwck.util.ResponseUtil;
 import com.jfinal.core.Controller;
 import com.jfinal.validate.Validator;
@@ -27,12 +29,25 @@ public class UserValidator extends Validator {
             }
             validateString("pwd", 6, 20, "pwd", "密码长度在6-20字符之间");
             validateString("realName", 2, 10, "realName", "姓名长度在2-10个字符之间");
-            if(c.getPara("areaCode") == null){
-                addError("areaCode", "区县所属代码必须填写");
-            }else{
-                //验证areaCode在数据库中是否存在
-                if(Area.findByAreaCode(c.getPara("areaCode")) == null){
-                    addError("areaCode", "区县所属代码不存在");
+            String type = c.getPara("type");
+            System.out.println("type = " + type);
+            if(type.equals(HwcUserType.qxAdmin)) {
+                if (c.getPara("areaCode") == null) {
+                    addError("areaCode", "区县所属代码必须填写");
+                } else {
+                    //验证areaCode在数据库中是否存在
+                    if (Area.findByAreaCode(c.getPara("areaCode")) == null) {
+                        addError("areaCode", "区县所属代码不存在");
+                    }
+                }
+            }else if(type.equals(HwcUserType.yqadmin)){
+                if (c.getPara("yqCode") == null) {
+                    addError("yqCode", "区县所属代码必须填写");
+                } else {
+                    //验证areaCode在数据库中是否存在
+                    if (Yuanqu.getYuanquByCode(c.getPara("yqCode")) == null) {
+                        addError("yqCode", "园区所属代码不存在");
+                    }
                 }
             }
         }else if(getActionKey().equals("/api/hwc/users/modify")){

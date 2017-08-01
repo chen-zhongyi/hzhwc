@@ -45,6 +45,7 @@ public class BaseController extends Controller {
         map.put("realName", user.get("realName"));
         map.put("areaLevel", user.get("areaLevel"));
         map.put("areaCode", user.get("areaCode"));
+        map.put("yqCode", user.get("yqCode"));
         map.put("sample", Samples.dao.findById(user.get("sampleId")));
         map.put("warehouseIds", user.getStr("warehouseIds"));
         map.put("type", user.get("type")); // 2企业用户， 0市级管理员，1县管理员

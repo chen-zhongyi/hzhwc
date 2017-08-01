@@ -16,11 +16,11 @@ import java.util.Map;
 public class UserSystemValidator extends Validator{
 
     protected void validate(Controller c){
-        validateRequiredString("userId", "userId", "用户名必须");
-        String userId = c.getPara("userId");
-        if(userId != null){
-            if(Account.dao.findById(userId) == null){
-                addError("userId", "用户名不存在");
+        //validateRequiredString("userId", "userId", "用户名必须");
+        String userId = c.getPara("0");
+        if(userId != null) {
+            if (Account.dao.findById(userId) == null) {
+                addError("userId", "用户不存在");
             }
         }
     }

@@ -194,6 +194,8 @@ public class CameraController extends BaseController{
             if(ssqx != null){
                 filter += " and " + s + "ssqx = '" + ssqx + "' ";
             }
+        }else if(loginUser.get("type").toString().equals(HwcUserType.yqadmin)){
+            filter += " and " + s + "ssyq = '" + loginUser.get("yqCode") + "' ";
         }
         String jsdwmc = getPara("jsdwmc");
         if(jsdwmc != null){

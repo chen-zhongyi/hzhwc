@@ -40,7 +40,7 @@ public class UserSystemController extends BaseController{
             //String id = getPara(0);
             //if(id != null){
                 System.out.println("[PUT] update id -- ");
-                forwardAction("/api/system/usersystems/modify");
+                redirect("/api/system/usersystems/modify/" + getPara(0) + "?" + getParam());
                 success = true;
             //}
         }else if(getRequest().getMethod().equals("DELETE")){
@@ -116,7 +116,8 @@ public class UserSystemController extends BaseController{
      * @Param system 权限
      */
     public void modify(){
-        String accountId = getPara("userId");
+        //String accountId = getPara("userId");
+        String accountId = getPara(0);
         String systems = getPara("system");
         boolean success = true;
         for(String sys : systems.split(",")){

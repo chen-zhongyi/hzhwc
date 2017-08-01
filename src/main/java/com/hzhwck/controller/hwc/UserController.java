@@ -154,7 +154,9 @@ public class UserController extends BaseController {
                 user.set("type", getPara("type"));
                 user.set("realName", getPara("realName"));
                 user.set("areaCode", getPara("areaCode"));
-                user.set("areaLevel", Area.findByAreaCode(getPara("areaCode")).get("level"));
+                user.set("yqCode", getPara("yqCode"));
+                if(getPara("areaCode") != null)
+                    user.set("areaLevel", Area.findByAreaCode(getPara("areaCode")).get("level"));
                 user.set("accountId", -1);
                 user = User.add(user);
                 if(user == null)    return false;
@@ -229,6 +231,11 @@ public class UserController extends BaseController {
                 if(areaCode != null)    {
                     user.set("areaCode", areaCode);
                     user.set("areaLevel", Area.findByAreaCode(getPara("areaCode")).get("level"));
+                    flag = true;
+                }
+                String yqCode = getPara("yqCode");
+                if(yqCode != null){
+                    user.set("yqCode", yqCode);
                     flag = true;
                 }
                 if(flag == true && User.modify(user) == null)   return false;
@@ -399,19 +406,102 @@ public class UserController extends BaseController {
         String orderBy = getPara("oderBy", hu + "id");
         String filter = " where " + sa + "id = " + hu + "accountId ";
         Map<String, Object> loginUser = getSessionAttr("user");
+
+        String sampleFilter = "";
+        String jsdwmc = getPara("jsdwmc");
+        if(jsdwmc != null){
+            sampleFilter = " and " + hs + "jsdwmc like '%" + jsdwmc + "%' ";
+        }
+        String shtyxydm = getPara("shtyxydm");
+        if(shtyxydm != null){
+            sampleFilter += " and " + hs + "shtyxydm like '%" + shtyxydm + "%' ";
+        }
         if(loginUser.get("type").toString().equals(HwcUserType.sample)){
             filter += " and " + sa + "id = " + loginUser.get("accountId") + " ";
         }else if(loginUser.get("type").toString().equals(HwcUserType.qxAdmin)){
             String accountId = loginUser.get("id").toString();
-            filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode = '" + loginUser.get("areaCode") + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null " +
-                    "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + loginUser.get("areaCode") + "')) ";
+            String yqCode = getPara("yqCode");
+            if(yqCode == null) {
+                if(sampleFilter.equals("")) {
+                    filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode = '" + loginUser.get("areaCode") + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null and yqCode is null " +
+                            "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + loginUser.get("areaCode") + "')) ";
+                }else {
+                    filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode is null and yqCode is null " +
+                            "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + loginUser.get("areaCode") + "'" + sampleFilter + ")) ";
+                }
+            }else {
+                if(sampleFilter.equals("")) {
+                    filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode = '" + loginUser.get("areaCode") + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null and yqCode is null " +
+                            "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + loginUser.get("areaCode") + "' and ssyq = '" + yqCode + "' )) ";
+                }else {
+                    filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode is null and yqCode is null " +
+                            "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + loginUser.get("areaCode") + "' and ssyq = '" + yqCode + "' " + sampleFilter + ")) ";
+                }
+            }
         }else if(loginUser.get("type").toString().equals(HwcUserType.admin)){
             String areaCode = getPara("areaCode");
             String accountId = loginUser.get("id").toString();
+            String yqCode = getPara("yqCode");
             if(areaCode != null){
-                filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode = '" + areaCode + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null " +
-                        "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + areaCode + "')) ";
+                if(yqCode == null) {
+                    if(sampleFilter.equals("")) {
+                        filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode = '" + areaCode + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null and yqCode is null " +
+                                "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + areaCode + "')) ";
+                    }else {
+                        filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode is null and yqCode is null " +
+                                "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + areaCode + "'" + sampleFilter + ")) ";
+                    }
+                }else {
+                    if(sampleFilter.equals("")) {
+                        filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode = '" + areaCode + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null and yqCode is null " +
+                                "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + areaCode + "' and ssyq = '" + yqCode + "' )) ";
+                    }else {
+                        filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode is null and yqCode is null " +
+                                "and " + hu + "sampleId = " + hs + "id and " + hs + "ssqx = '" + areaCode + "' and ssyq = '" + yqCode + "' " + sampleFilter + ")) ";
+                    }
+                }
             }
+            if(areaCode == null && yqCode != null) {
+                if(sampleFilter.equals("")) {
+                    filter += " and " + sa + "id != " + accountId + " and ((" + hu + "yqCode = '" + yqCode + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null and yqCode is null " +
+                            "and " + hu + "sampleId = " + hs + "id and " + hs + "ssyq = '" + yqCode + "')) ";
+                }else {
+                    filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode is null and yqCode is null " +
+                            "and " + hu + "sampleId = " + hs + "id and " + hs + "ssyq = '" + yqCode + "' " + sampleFilter + ")) ";
+                }
+            }
+            if(areaCode == null && yqCode == null){
+                if(!sampleFilter.equals("")){
+                    filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode is null and yqCode is null " +
+                            "and " + hu + "sampleId = " + hs + "id " + sampleFilter + ")) ";
+                }
+            }
+        }else if(loginUser.get("type").toString().equals(HwcUserType.yqadmin)){
+            String accountId = loginUser.get("id").toString();
+            if(sampleFilter.equals("")) {
+                filter += " and " + sa + "id != " + accountId + " and ((" + hu + "yqCode = '" + loginUser.get("yqCode") + "' and " + hu + "sampleId is null) or (" + hu + "areaCode is null and yqCode is null " +
+                        "and " + hu + "sampleId = " + hs + "id and " + hs + "ssyq = '" + loginUser.get("yqCode") + "')) ";
+            }else {
+                filter += " and " + sa + "id != " + accountId + " and ((" + hu + "areaCode is null and yqCode is null " +
+                        "and " + hu + "sampleId = " + hs + "id and " + hs + "ssyq = '" + loginUser.get("yqCode") + "'" + sampleFilter + ")) ";
+            }
+        }else {
+            Map<String, Object> data = new HashMap<String, Object>();
+            data.put("pageNumber", pageNumber);
+            data.put("pageSize", pageSize);
+            data.put("totalRow", 0);
+            data.put("totalPage", 0);
+            data.put("fistPage", true);
+            data.put("lastPage", true);
+            List<Map<String, Object>> list = new LinkedList<Map<String, Object>>();
+            data.put("list", list);
+            if(getPara("callback") != null) {
+                String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "获取用户分页信息成功", data));
+                renderJson(getPara("callback", "default") + "(" + json + ")");
+            } else {
+                renderJson(ResponseUtil.setRes(CodeType.success, "获取用户分页信息成功", data));
+            }
+            return ;
         }
         String status = getPara("status");
         if(status != null){

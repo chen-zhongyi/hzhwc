@@ -107,6 +107,11 @@ public class ReportController extends BaseController{
                 filter = " where " + hs + "ssqx = '" + loginUser.get("areaCode") + "' ";
             else
                 filter += " and " + hs + "ssqx = '" + loginUser.get("areaCode") + "' ";
+        }else if(loginUser.get("type").toString().equals(HwcUserType.yqadmin)){
+            if(filter.equals(""))
+                filter = " where " + hs + "ssyq = '" + loginUser.get("yqCode") + "' ";
+            else
+                filter += " and " + hs + "ssyq = '" + loginUser.get("yqCode") + "' ";
         }
 
 

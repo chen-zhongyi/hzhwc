@@ -76,7 +76,7 @@ public class PDF {
 
         Style codeArea = new Style();
         codeArea.setFont(font)
-                .setFontSize(14)
+                .setFontSize(11)
                 .setFontColor(Color.BLACK);
 
         Style front = new Style()
@@ -692,7 +692,7 @@ public class PDF {
         cell = new Cell(1, 2).add("其他说明")
                 .setHeight(70)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
-                .addStyle(codeArea);
+                .addStyle(code);
         table.addCell(cell);
         cell = new Cell(1, 8).add(isNull(data.get("qtsm3")))
                 .setHeight(70)
@@ -775,7 +775,11 @@ public class PDF {
                 .addStyle(code);
         table.addCell(cell);
 
-        cell = new Cell(1, 3).add("其中：境内工作人员")
+        cell = new Cell(2, 1).add("其中")
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .addStyle(code);
+        table.addCell(cell);
+        cell = new Cell(1, 2).add("境内工作人员")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -784,7 +788,7 @@ public class PDF {
                 .addStyle(code);
         table.addCell(cell);
 
-        cell = new Cell(1, 3).add("境外工作人员")
+        cell = new Cell(1, 2).add("境外工作人员")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -902,15 +906,16 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 3).add(isNull(month.get("xssr")) + "万元")
+        cell = new Cell(1, 8).add(isNull(month.get("xssr")) + "万元")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 2).add("自营销售收入")
+
+        cell = new Cell(1, 2).add("其中：自营收入")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 3).add(isNull(month.get("zysr")) + "万元")
+        cell = new Cell(1, 8).add(isNull(month.get("zysr")) + "万元")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -985,12 +990,12 @@ public class PDF {
         table.addCell(cell);*/
 
         cell = new Cell(1, 2).add("其他说明")
-                .setHeight(190)
+                .setHeight(170)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
         cell = new Cell(1, 8).add(isNull(data.get("qtsm4")))
-                .setHeight(190)
+                .setHeight(170)
                 .addStyle(codeArea);
         table.addCell(cell);
 
@@ -1215,7 +1220,7 @@ public class PDF {
         cell = new Cell(1, 8).add(isNull(table2.get("qt")))
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setHeight(120)
-                .addStyle(code);
+                .addStyle(codeArea);
         table.addCell(cell);
 
         cell = new Cell(1, 10).add("第四部分 仓储管理信息化建设")
@@ -1355,7 +1360,7 @@ public class PDF {
         }
         doc.add(table);
 
-        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        /*doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
         doc.add(new Paragraph("附件 5 仓库租赁协议")
                 .setFontSize(16)
                 .setFont(font));
@@ -1373,7 +1378,7 @@ public class PDF {
                 .setFont(font));
         doc.add(new Paragraph("附件 10 清关资质证明材料")
                 .setFontSize(16)
-                .setFont(font));
+                .setFont(font));*/
 
         int n = pdfDoc.getNumberOfPages();
         Paragraph footer;
