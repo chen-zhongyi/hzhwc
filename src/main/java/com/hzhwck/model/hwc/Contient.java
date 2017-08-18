@@ -21,4 +21,8 @@ public class Contient extends Model<Contient> {
         }
         return contients;
     }
+
+    public static Contient getByCode(String code){
+        return Contient.dao.findFirst("select * from " + tableName + " where code = '" + code + "'");
+    }
 }

@@ -54,9 +54,9 @@ public class GetReports extends BaseController{
 
         if(status != null){
             if(status.equals("0")){
-                status = " where (ta.status = 0 or ta.status is null) ";
+                status = " and (ta.status = 0 or ta.status is null) ";
             }else {
-                status = " where ta.status = " + status + " ";
+                status = " and ta.status = " + status + " ";
             }
         }else {
             status = "";
@@ -94,10 +94,10 @@ public class GetReports extends BaseController{
                 "on r.tableId = al.tableId and r.planId = al.planId and r.sampleId = al.sampleId"
                 + " union all " +
                 "select al.*, r.status, r.id from " +
-                "(select t.id as tableId, p.id as planId, w.sampleId, p.startAt, p.endAt, p.round, w.id as warehouseId from hwc_tables t, hwc_reportplans p, hwc_warehouses w, hwc_samples s where s.id = w.sampleId and p.tableGroupId = t.groupId and t.isRelatedWithWarehouse = 1 and w.status = 1 and p.status = 1 " + wSampleId + tableId + " " + sampleFilter + " ) as al " +
+                "(select t.id as tableId, p.id as planId, w.sampleId, p.startAt, p.endAt, p.round, w.id as warehouseId from hwc_tables t, hwc_reportplans p, hwc_warehouses w, hwc_samples s where s.id = w.sampleId and p.tableGroupId = t.groupId and t.isRelatedWithWarehouse = 1 and p.status = 1 " + wSampleId + tableId + " " + sampleFilter + " ) as al " +
                 "left outer join " +
                 "hwc_reports as r " +
-                "on r.tableId = al.tableId and r.planId = al.planId and r.sampleId = al.sampleId and r.warehouseId = al.warehouseId) ta " + status );
+                "on r.tableId = al.tableId and r.planId = al.planId and r.sampleId = al.sampleId and r.warehouseId = al.warehouseId) ta, hwc_reportplans p where p.id = ta.planId " + status + " order by p.round desc ");
         for(Record record : records.getList()){
             record.set("table", Tables.dao.findById(record.get("tableId").toString()));
             record.set("sample", Samples.dao.findById(record.get("sampleId").toString()));

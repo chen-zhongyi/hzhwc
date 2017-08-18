@@ -1,5 +1,7 @@
 package com.hzhwck.util;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import com.hzhwck.model.hwc.*;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.color.Color;
@@ -8,7 +10,6 @@ import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvasConstants;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.*;
@@ -17,17 +18,23 @@ import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.VerticalAlignment;
 import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.activerecord.Record;
+import org.apache.log4j.Logger;
+import org.apache.tools.zip.ZipEntry;
+import org.apache.tools.zip.ZipFile;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by 陈忠意 on 2017/7/9.
  */
 public class PDF {
+
+    private static final Logger log =  Logger.getLogger(PDF.class);
 
     public static void getPdf(Map<String, Object> warehouse, Map<String, Object> data, String path){
         try {
@@ -84,11 +91,14 @@ public class PDF {
                 .setFontSize(18)
                 .setFontColor(Color.BLACK);
 
-        doc.add(new Paragraph("\n\n\n\n\n\n\n\n\n"));
-        Paragraph text = new Paragraph("杭州公共海外仓评审材料")
+        doc.add(new Paragraph("附件 1")
+                .setFontSize(20)
+                .setFont(font));
+        doc.add(new Paragraph("\n\n\n\n\n\n\n"));
+        Paragraph text = new Paragraph("杭州市公共海外仓评审材料")
                 .setTextAlignment(TextAlignment.CENTER)
                 .setFont(font)
-                .setFontSize(40);
+                .setFontSize(38);
         doc.add(text);
         doc.add(new Paragraph("\n\n\n\n\n\n\n\n\n\n\n\n"));
         doc.add(new Paragraph());
@@ -102,7 +112,7 @@ public class PDF {
                 .addStyle(front).setFontSize(20));
         doc.add(new Paragraph().add(new Tab()).add(new Tab()).add("联系电话：" + isNull(sample.get("lxsj")))
                 .addStyle(front).setFontSize(20));
-        doc.add(new Paragraph().add(new Tab()).add(new Tab()).add("申请日期：" + sf.format(date))
+        doc.add(new Paragraph().add(new Tab()).add(new Tab()).add("申请日期：" + (data.get("sqrq") == null ? "" : data.get("sqrq").toString()))
                 .addStyle(front).setFontSize(20));
 
         doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
@@ -124,9 +134,9 @@ public class PDF {
                 .setFirstLineIndent(40)
                 .addStyle(front));
         doc.add(new Paragraph("\n\n\n\n\n\n\n\n\n"));
-        doc.add(new Paragraph().add(new Tab()).add("海外仓运营企业：" + isNull(sample.get("jsdwmc")) + "                     （盖章）")
+        doc.add(new Paragraph().add(new Tab()).add("海外仓运营企业：" + isNull(sample.get("jsdwmc")) + "（盖章）")
                 .addStyle(front));
-        doc.add(new Paragraph().add(new Tab()).add("法定代表人（或委托代理人）："  + isNull(sample.get("frdb")) + "           （盖章）")
+        doc.add(new Paragraph().add(new Tab()).add("法定代表人（或委托代理人）："  + isNull(sample.get("frdb")) + "（盖章）")
                 .addStyle(front));
         doc.add(new Paragraph().add(new Tab()).add("日期：" + sf.format(date))
                 .addStyle(front));
@@ -144,7 +154,7 @@ public class PDF {
                 .addStyle(codeTitle);
         table.addCell(cell);
 
-        cell = new Cell(1, 2).add("建设单位名称")
+        cell = new Cell(1, 2).add("运营企业名称")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 //.setTextAlignment(TextAlignment.CENTER)
                 .addStyle(code);
@@ -167,7 +177,7 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 3).add(sample.get("ssyq") == null ? "" : Yuanqu.getYuanquByCode(sample.getStr("ssyq")).getStr("name"))
+        cell = new Cell(1, 3).add(sample.get("ssyq").equals("-1") ? "" : Yuanqu.getYuanquByCode(sample.getStr("ssyq")).getStr("name"))
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
 
@@ -223,7 +233,7 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 4).add("(电话)" + isNull(sample.get("lxdh")))
+        cell = new Cell(1, 4).add("(固定电话)" + isNull(sample.get("lxdh")))
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -372,7 +382,7 @@ public class PDF {
         table.addCell(cell);
 
         table = new Table(10);
-        cell = new Cell(1, 10).add("一、平台名称")
+        cell = new Cell(1, 10).add("一、海外仓概况")
                 .addStyle(codeTitle);
         table.addCell(cell);
 
@@ -423,7 +433,7 @@ public class PDF {
                 .addStyle(code);
         table.addCell(cell);
 
-        cell = new Cell(1, 3).add("进出口权")
+        cell = new Cell(1, 3).add("是否具有进出口经营权")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -431,7 +441,7 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 2).add("登记证书编号")
+        cell = new Cell(1, 2).add("对外贸易经营者\n备案登记编号")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -440,7 +450,7 @@ public class PDF {
                 .addStyle(code);
         table.addCell(cell);
 
-        cell = new Cell(2, 3).add("营销平台")
+        cell = new Cell(2, 3).add("营销平台网址")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -569,11 +579,12 @@ public class PDF {
 
         cell = new Cell(1, 2).add("区位优势")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setHeight(100)
                 .addStyle(code);
         table.addCell(cell);
         cell = new Cell(1, 8).add(isNull(data.get("qwys")))
-                .setVerticalAlignment(VerticalAlignment.MIDDLE)
-                .addStyle(code);
+                .setHeight(100)
+                .addStyle(codeArea);
         table.addCell(cell);
 
         cell = new Cell(1, 10).add("三、海外仓用途与类型")
@@ -599,12 +610,12 @@ public class PDF {
         table.addCell(cell);
 
         cell = new Cell(1, 2).add("其他说明")
-                .setHeight(180)
+                .setHeight(80)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
         cell = new Cell(1, 8).add(isNull(data.get("qtsm1")))
-                .setHeight(180)
+                .setHeight(80)
                 .addStyle(codeArea);
         table.addCell(cell);
 
@@ -756,9 +767,8 @@ public class PDF {
                 .addStyle(code);
         table.addCell(cell);
         cell = new Cell(1, 8).add(isNull(data.get("scsbjyms")))
-                .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setHeight(130)
-                .addStyle(code);
+                .addStyle(codeArea);
         table.addCell(cell);
 
         cell = new Cell(1, 10).add("（三）人员配置")
@@ -888,7 +898,7 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 8).add(isNull(data.get("ndckz")))
+        cell = new Cell(1, 8).add(isNull(data.get("ndckz")) + "万元")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -897,7 +907,7 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 8).add(isNull(data.get("ndyysrze")))
+        cell = new Cell(1, 8).add(isNull(data.get("ndyysrze")) + "万元")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -906,7 +916,7 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 8).add(isNull(month.get("xssr")) + "万元")
+        cell = new Cell(1, 8).add(isNull(data.get("xssr")) + "万元")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -915,7 +925,7 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 8).add(isNull(month.get("zysr")) + "万元")
+        cell = new Cell(1, 8).add(isNull(data.get("zysr")) + "万元")
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
@@ -1218,7 +1228,6 @@ public class PDF {
                 .addStyle(code);
         table.addCell(cell);
         cell = new Cell(1, 8).add(isNull(table2.get("qt")))
-                .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setHeight(120)
                 .addStyle(codeArea);
         table.addCell(cell);
@@ -1266,48 +1275,127 @@ public class PDF {
         doc.add(table);
 
         doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        doc.add(new Paragraph("附件 1 境内营业执照")
+        doc.add(new Paragraph("附件 2 相关佐证材料")
+                .setFontSize(20)
+                .setFont(font));
+        doc.add(new Paragraph("附件 2.1 境外营业执照")
                 .setFontSize(16)
                 .setFont(font));
         String name;
         Image img;
-        if(warehouse.get("yyzz") != null) {
+        /*if(warehouse.get("yyzz") != null) {
             name = warehouse.getStr("yyzz");
             img = new Image(ImageDataFactory.create(PathKit.getWebRootPath() + File.separator +
                     "hwckimages" + File.separator + name.split("/")[name.split("/").length - 1]));
-            img.setHeight(297 * 2);
-            img.setWidth(210 * 2);
+            //img.setHeight(297 * 2);
+            img.setWidth(475);
             doc.add(img);
+        }*/
+        if(warehouse.get("yyzz") != null) {
+            name = (String) warehouse.get("yyzz");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
         }
 
         doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        doc.add(new Paragraph("附件 2 仓库平面图")
+        doc.add(new Paragraph("附件 2.2 仓库平面图")
                 .setFontSize(16)
                 .setFont(font));
-        if(warehouse.get("pmt") != null) {
+        /*if(warehouse.get("pmt") != null) {
             name = warehouse.getStr("pmt");
             img = new Image(ImageDataFactory.create(PathKit.getWebRootPath() + File.separator +
                     "hwckimages" + File.separator + name.split("/")[name.split("/").length - 1]));
-            img.setHeight(297 * 2);
-            img.setWidth(210 * 2);
+            //img.setHeight(297 * 2);
+            img.setWidth(475);
             doc.add(img);
+        }*/
+        if(warehouse.get("pmt") != null) {
+            name = (String) warehouse.get("pmt");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
         }
 
         doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        doc.add(new Paragraph("附件 3 自营出口权证书")
+        doc.add(new Paragraph("附件 2.3 对外贸易经营者备案登记表")
                 .setFontSize(16)
                 .setFont(font));
-        if(warehouse.get("smj") != null) {
+        /*if(warehouse.get("smj") != null) {
             name = warehouse.getStr("smj");
             img = new Image(ImageDataFactory.create(PathKit.getWebRootPath() + File.separator +
                     "hwckimages" + File.separator + name.split("/")[name.split("/").length - 1]));
-            img.setHeight(297 * 2);
-            img.setWidth(210 * 2);
+            //img.setHeight(297 * 2);
+            img.setWidth(475);
             doc.add(img);
+        }*/
+        if(warehouse.get("smj") != null) {
+            name = (String) warehouse.get("smj");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }else {
+            doc.add(new Paragraph("\n\n无")
+                    .setFontSize(16)
+                    .setFont(font));
         }
 
         doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        doc.add(new Paragraph("附件 4 服务企业名录")
+        doc.add(new Paragraph("附件 2.4 服务企业名录")
                 .setFontSize(16)
                 .setFont(font));
         table = new Table(16);
@@ -1358,6 +1446,451 @@ public class PDF {
                     .addStyle(code);
             table.addCell(cell);
         }
+        doc.add(table);
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.5 境内营业执照")
+                .setFontSize(16)
+                .setFont(font));
+        if(data.get("file_5") != null) {
+            name = (String) data.get("file_5");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.6  境外海外仓的股权证明")
+                .setFontSize(16)
+                .setFont(font));
+        if(data.get("file_6") != null) {
+            name = (String) data.get("file_6");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.7  境外海外仓的投资协议")
+                .setFontSize(16)
+                .setFont(font));
+        if(data.get("file_7") != null) {
+            name = (String) data.get("file_7");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.8  仓库租赁合同证明材料")
+                .setFontSize(16)
+                .setFont(font));
+        /*if(data.get("file_8") != null) {
+            name = (String) data.get("file_8");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    *//*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*//*
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+*/
+
+        if(warehouse.get("zlht") != null) {
+            name = (String) warehouse.get("zlht");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.9  境外公共海外仓货物出入库情况汇总")
+                .setFontSize(16)
+                .setFont(font));
+        table = new Table(10);
+
+        cell= new Cell(1, 3).add("服务企业名称")
+                .addStyle(code);
+        table.addCell(cell);
+        cell= new Cell(1, 3).add("产品名称")
+                .addStyle(code);
+        table.addCell(cell);
+        cell= new Cell(1, 2).add("入库数量")
+                .addStyle(code);
+        table.addCell(cell);
+        cell= new Cell(1, 2).add("出库数量")
+                .addStyle(code);
+        table.addCell(cell);
+
+        java.util.List<Map<String, Object>> table9 = new Gson().fromJson(isNull(month.get("table9")).toString(), new TypeToken<java.util.List<Map<String, Object>>>(){}.getType());
+        //java.util.List<Map<String, Object>> table9 = (java.util.List)data.get("table9");
+        if(table9 != null) {
+            for (int i = 1; i <= table9.size(); ++i) {
+                Map<String, Object> s = table9.get(i - 1);
+                cell = new Cell(1, 3).add(isNull(s.get("qymc")))
+                        .addStyle(code);
+                table.addCell(cell);
+                cell = new Cell(1, 3).add(isNull(s.get("cpmc")))
+                        .addStyle(code);
+                table.addCell(cell);
+                cell = new Cell(1, 2).add(isNull(s.get("rksl")))
+                        .addStyle(code);
+                table.addCell(cell);
+                cell = new Cell(1, 2).add(isNull(s.get("cksl")))
+                        .addStyle(code);
+                table.addCell(cell);
+            }
+            doc.add(table);
+        }
+
+        /*if(data.get("file_9") != null) {
+            name = (String) data.get("file_9");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    //doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }*/
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.10  清关资质证明材料")
+                .setFontSize(16)
+                .setFont(font));
+        if(data.get("file_10") != null) {
+            name = (String) data.get("file_10");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.11  设备清单证明材料")
+                .setFontSize(16)
+                .setFont(font));
+        table = new Table(5);
+
+        cell= new Cell(1, 1).add("设备名称")
+                .addStyle(code);
+        table.addCell(cell);
+        cell= new Cell(1, 1).add("数量")
+                .addStyle(code);
+        table.addCell(cell);
+        cell= new Cell(1, 1).add("自有或租赁")
+                .addStyle(code);
+        table.addCell(cell);
+        cell= new Cell(1, 1).add("购置原价(或租赁价格)(元)")
+                .addStyle(code);
+        table.addCell(cell);
+        cell= new Cell(1, 1).add("购置(或租赁)时间")
+                .addStyle(code);
+        table.addCell(cell);
+
+        java.util.List<Map<String, Object>> table11 = new LinkedList<Map<String, Object>>();
+        System.out.println("table11 = " + year.get("table11"));
+        String temp = year.get("table11");
+        for(String str : temp.split("-_-_-")){
+            java.util.List a = new Gson().fromJson(str, new TypeToken<java.util.List<Map<String, Object>>>(){}.getType());
+            table11.addAll(a);
+        }
+        //java.util.List<Map<String, Object>> table11 = (java.util.List)data.get("table11");
+        for(int i = 1;i <= table11.size();++i){
+            Map<String, Object> s = table11.get(i - 1);
+            cell= new Cell(1, 1).add(isNull(s.get("sbmc")))
+                    .addStyle(code);
+            table.addCell(cell);
+            cell= new Cell(1, 1).add(isNull(s.get("sl")))
+                    .addStyle(code);
+            table.addCell(cell);
+            cell= new Cell(1, 1).add(isNull(s.get("zyzl")))
+                    .addStyle(code);
+            table.addCell(cell);
+            cell= new Cell(1, 1).add(isNull(s.get("yj")))
+                    .addStyle(code);
+            table.addCell(cell);
+            cell= new Cell(1, 1).add(isNull(s.get("sj")))
+                    .addStyle(code);
+            table.addCell(cell);
+        }
+        doc.add(table);
+        /*doc.add(new Paragraph("\n设备照片\n")
+                .setFontSize(16)
+                .setFont(font));
+        if(data.get("file_11_1") != null) {
+            name = (String) data.get("file_11_1");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    //doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }*/
+        doc.add(new Paragraph("\n付款财务凭证或设备租赁协议\n")
+                .setFontSize(16)
+                .setFont(font));
+        if(data.get("file_11") != null) {
+            name = (String) data.get("file_11");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    //doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.12  仓库管理系统证明材料")
+                .setFontSize(16)
+                .setFont(font));
+        if(data.get("file_12") != null) {
+            name = (String) data.get("file_12");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.13  出口单证资料证明")
+                .setFontSize(16)
+                .setFont(font));
+        if(data.get("file_13") != null) {
+            name = (String) data.get("file_13");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.14  知识产权证明材料")
+                .setFontSize(16)
+                .setFont(font));
+        if(data.get("file_14") != null) {
+            name = (String) data.get("file_14");
+            System.out.println("name = " + name);
+            String zipName = name.split("/")[name.split("/").length - 1];
+            System.out.println("zipName = " + zipName);
+            String zipPath = PathKit.getWebRootPath() + File.separator + "hwckimages" + File.separator + zipName;
+            System.out.println("zipName = " + zipName + ", indexOf(.) = " + zipName.indexOf(".") + ", " + Arrays.toString(zipName.split(".")));
+            String unPath = PathKit.getWebRootPath() + File.separator + "unzips" + File.separator + zipName.substring(0, zipName.indexOf("."));
+            System.out.println("zipPath = " + zipPath);
+            System.out.println("unPath = " + unPath);
+            java.util.List<String> images = unZip(zipPath, unPath);
+            if(images != null) {
+                for (int i = 0; i < images.size(); ++i) {
+                    String image = images.get(i);
+                    /*if (i != 0) {
+                        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    }*/
+                    img = new Image(ImageDataFactory.create(image));
+                    //img.setHeight(297 * 2);
+                    img.setWidth(475);
+                    doc.add(img);
+                }
+            }
+        }
+
+        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        doc.add(new Paragraph("附件 2.15  主管部门审核意见")
+                .setFontSize(16)
+                .setFont(font));
+
+        table = new Table(10);
+        cell= new Cell(1, 2).add("注册地商务部门推荐意见")
+                .addStyle(code).setFontSize(14);
+        table.addCell(cell);
+        Paragraph p1 = new Paragraph().add(new Tab()).add(new Tab()).add(new Tab()).add(new Tab()).add("（单位盖章）");
+        Paragraph p2 = new Paragraph().add(new Tab()).add(new Tab()).add(new Tab()).add("年").add(new Tab()).add("月").add(new Tab()).add("日");
+        Paragraph p3 = new Paragraph().add(new Tab()).add(new Tab()).add("联系人：").add(new Tab()).add(new Tab()).add("电话：");
+        cell= new Cell(1, 8).add("\n\n\n\n\n\n\n\n").add(p1).add("\n").add(p2).add("\n").add(p3).add("\n")
+                .addStyle(code).setFontSize(14);
+        table.addCell(cell);
+
+        cell= new Cell(1, 2).add("注册地财政部门推荐意见")
+                .addStyle(code).setFontSize(14);
+        table.addCell(cell);
+        cell= new Cell(1, 8).add("\n\n\n\n\n\n\n\n").add(p1).add("\n").add(p2).add("\n").add(p3).add("\n")
+                .addStyle(code).setFontSize(14);
+        table.addCell(cell);
         doc.add(table);
 
         /*doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
@@ -1440,8 +1973,87 @@ public class PDF {
     pdf.close();*/
     }
 
+    public static java.util.List<String> unZip(String path, String unPath){
+        File unZip = new File(unPath);
+        if(!unZip.exists()){
+            unZip.mkdirs();
+        }
+        File file = new File(path);
+        ZipFile zipFile = null;
+        try{
+            zipFile = new ZipFile(file, "UTF-8");
+        }catch(IOException e){
+            e.printStackTrace();
+            log.info("压缩文件不存在");
+            return null;
+        }
+        Enumeration e = zipFile.getEntries();
+        java.util.List<String> images = new LinkedList<String>();
+        while(e.hasMoreElements()){
+            ZipEntry zipEntry = (ZipEntry) e.nextElement();
+            if(zipEntry.isDirectory()){
+                System.out.println("dir = " + zipEntry.getName());
+                new File(unZip + File.separator + zipEntry.getName())
+                        .mkdirs();
+                continue;
+            }else {
+                String imagePath = unZip + File.separator + zipEntry.getName();
+                if(imagePath.contains("__MACOSX"))  continue;
+                System.out.println("imagePath = " + imagePath);
+                File image = new File(imagePath);
+                images.add(imagePath);
+                if(! image.exists()){
+                    InputStream is = null;
+                    FileOutputStream fo = null;
+                    try {
+                        image.createNewFile();
+                        is = zipFile.getInputStream(zipEntry);
+                        fo = new FileOutputStream(image);
+                        int length = 0;
+                        byte[] b = new byte[1024];
+                        while((length = is.read(b, 0, 1024)) != -1){
+                            fo.write(b, 0, length);
+                        }
+                    }catch (IOException ex){
+                        ex.printStackTrace();
+                    }finally{
+                        try {
+                            if (is != null) is.close();
+                            if (fo != null) fo.close();
+                        }catch (IOException ex){
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        try {
+            zipFile.close();
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }
+        Collections.sort(images);
+        return images;
+    }
+
     public static void main(String[] args) throws IOException{
-        PdfDocument pdf = new PdfDocument(new PdfWriter("E:\\workspace\\hzhwck\\target\\hzhwck\\pdfs\\说明.pdf"));
+
+        String json = "";
+
+        java.util.List<Map<String, Object>> table11 = new LinkedList<Map<String, Object>>();
+        String temp = json;
+        for(String str : temp.split("---")){
+            System.out.println(str);
+            java.util.List a = new Gson().fromJson(str, new TypeToken<java.util.List<Map<String, Object>>>(){}.getType());
+            System.out.println(a);
+            table11.addAll(a);
+        }
+        System.out.println(table11);
+
+        /*String path = "E:\\doctorimages\\doctorimages.zip";
+        String unPath = "E:\\doctorimages\\images";
+        System.out.println(unZip(path, unPath));*/
+        /*PdfDocument pdf = new PdfDocument(new PdfWriter("E:\\workspace\\hzhwck\\target\\hzhwck\\pdfs\\说明.pdf"));
         Document document = new Document(pdf);
         //document.setTextAlignment(TextAlignment.JUSTIFIED);
         //.setHyphenation(new HyphenationConfig("en", "uk", 3, 3));
@@ -1451,21 +2063,21 @@ public class PDF {
                 .setFontSize(18)
                 .setFontColor(Color.BLACK);
 
-        /*BufferedReader br = new BufferedReader(new FileReader(SRC));
+        *//*BufferedReader br = new BufferedReader(new FileReader(SRC));
         String line;
         while((line = br.readLine()) != null) {
             //System.out.print(line + "\n");
             Text text = new Text(line + "\n");
             document.add(new Paragraph().add(text));
         }
-        br.close();*/
-        /*pdfPage page = pdf.addNewPage();
+        br.close();*//*
+        *//*pdfPage page = pdf.addNewPage();
         PdfCanvas pdfCanvas = new PdfCanvas(page);
         Rectangle rectangle = new Rectangle(36, 650, 100, 100);
         pdfCanvas.rectangle(rectangle);
         pdfCanvas.stroke();
         Canvas canvas = new Canvas(pdfCanvas, pdf, rectangle);
-*/
+*//*
 
         //bold加粗 italic斜体
         Text title = new Text("请先提交数据！").setFont(font)
@@ -1480,6 +2092,6 @@ public class PDF {
         document.add(new Paragraph().add(new Tab()).add(new Tab()).add(new Tab()).add(new Tab()).add(new Tab()).add(" by ").add(author));
         document.close();
        // canvas.add(p);
-        //pdf.close();
+        //pdf.close();*/
     }
 }

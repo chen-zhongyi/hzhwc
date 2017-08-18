@@ -17,10 +17,7 @@ import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by 陈忠意 on 2017/6/26.
@@ -295,9 +292,9 @@ public class TableController extends BaseController{
         }
         //status
         if(filter.equals(""))
-            filter = " where " + hr + "status = 5 ";
+            filter = " where " + hr + "status != 0 ";
         else
-            filter += " and " + hr + "status = 5 ";
+            filter += " and " + hr + "status != 0 ";
 
         Date startAt = getParaToDate("startAt");
 
@@ -411,7 +408,7 @@ public class TableController extends BaseController{
             SimpleDateFormat sf = new SimpleDateFormat("yyyy");
             List<Record> records = Db.find("select " + s + "ssqx, sum(" + t + "xyhwcgs) as xyhwcgs, sum(" + t + "yyy) as yyy, sum(" + t + "zj) as zj " +
                     "from " + TableNames.hwcReports + ", " + TableNames.hwcTable1 + ", " + TableNames.hwcSamples + ", " + TableNames.hwcReportPlans + " " +
-                    "where " + r + "sampleId = " + s + "id and " + r + "tableId = 1 and " + r + "status = 5 and " + r + "tableReportId = " + t + "id " + " " +
+                    "where " + r + "sampleId = " + s + "id and " + r + "tableId = 1 and " + r + "status != 0 and " + r + "tableReportId = " + t + "id " + " " +
                     "and " + p + "id = " + r + "planId and DATE_FORMAT(" + p + "round, '%Y') = '" + sf.format(date) + "' " +
                     "group by " + s + "ssqx order by " + s + "ssqx");
             if(getPara("callback") != null){
@@ -427,7 +424,7 @@ public class TableController extends BaseController{
             SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM");
             List<Record> records = Db.find("select " + s + "ssqx, sum(ht3.ckddlzyms) as ckddlzyms, sum(ht3.byljckz) as byljckz, sum(ht3.fwqysl) as fwqysl, sum(ht3.ckgztr) as ckgztr, sum(ht3.qmcyrs) as qmcyrs, sum(ht3.gwry) as gwry, sum(ht3.qmcyryqt) as qmcyryqt, sum(ht3.hzqy) as hzqy, sum(ht3.zjmj) as zjmj, sum(ht3.reportId) as reportId, sum(ht3.ckzltr) as ckzltr, sum(ht3.ygxc) as ygxc, sum(ht3.id) as id, sum(ht3.ytrsymj) as ytrsymj, sum(ht3.ljjstzeqt) as ljjstzeqt, sum(ht3.ckz) as ckz, sum(ht3.ckddlbhms) as ckddlbhms, sum(ht3.xssr) as xssr, sum(ht3.zyxs) as zyxs, sum(ht3.xymj) as xymj, sum(ht3.sbgztr) as sbgztr, sum(ht3.rkddlbhms) as rkddlbhms, sum(ht3.hyqys) as hyqys, sum(ht3.ljjstze) as ljjstze, sum(ht3.rkddlzyms) as rkddlzyms, sum(ht3.gnry) as gnry, sum(ht3.jsry) as jsry, sum(ht3.byljrkz) as byljrkz, sum(ht3.qmzkhz) as qmzkhz, sum(ht3.rkhwzl) as rkhwzl, sum(ht3.ckhwzl) as ckhwzl, sum(ht3.qmzkhwzl) as qmzkhwzl " +
                     "from " + TableNames.hwcReports + ", " + TableNames.hwcTable3 + ", " + TableNames.hwcSamples + ", " + TableNames.hwcReportPlans + " " +
-                    "where " + r + "sampleId = " + s + "id and " + r + "tableId = 3 and " + r + "status = 5 and " + r + "tableReportId = " + t + "id " + " " +
+                    "where " + r + "sampleId = " + s + "id and " + r + "tableId = 3 and " + r + "status != 0 and " + r + "tableReportId = " + t + "id " + " " +
                     "and " + p + "id = " + r + "planId and DATE_FORMAT(" + p + "round, '%Y-%m') = '" + sf.format(date) + "' " +
                     "group by " + s + "ssqx order by " + s + "ssqx");
             if(getPara("callback") != null){
@@ -444,61 +441,79 @@ public class TableController extends BaseController{
      */
     @ActionKey("/api/hwc/tables/analysis")
     public void analysis(){
+
+        Date monthDate = Db.findFirst("select max(p.round) as round from hwc_reportplans p where p.tableGroupId = 3").getDate("round");
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(monthDate);
+        calendar.add(Calendar.YEAR, -1);
+        Date priMonthDate = calendar.getTime();
+        calendar.setTime(monthDate);
+        calendar.set(Calendar.MONTH, 0);
+        Date firstMonthDate = calendar.getTime();
         String type = getPara("type");
+        calendar.setTime(firstMonthDate);
+        calendar.add(Calendar.YEAR, -1);
+        Date priFirstMonthDate = calendar.getTime();
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+        System.out.println("monthDate = " + sf.format(monthDate));
+        System.out.println("priMonthDate = " + sf.format(priMonthDate));
+        System.out.println("firstMonthDate = " + sf.format(firstMonthDate));
+        System.out.println("priFirstMonthDate = " + sf.format(priFirstMonthDate));
+
         Map<String , Object> data = new HashMap<String, Object>();
         if(type.equals("1")){
             String[] names = {"xymj", "ytrsymj", "zjmj"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
         }else if(type.equals("2")){
             String[] names = {"ljjstze", "sbgztr", "ckzltr", "ckgztr", "ljjstzeqt"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
         }else if(type.equals("3")){
             String[] names = {"ckz", "yyxsr", "xssr"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
-            data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), names));
-            data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
+            data.put("year", getByMonth(firstMonthDate, monthDate, names));
+            data.put("priYear", getByMonth(priFirstMonthDate, priMonthDate, names));
         }/*else if(type.equals("4")){
             String[] names = {"fwxyysr", "cc", "tc", "ps", "fwxyysrqt"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
-            data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), names));
-            data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
+            data.put("year", getByMonth(firstMonthDate, monthDate, names));
+            data.put("priYear", getByMonth(priFirstMonthDate, priMonthDate, names));
         }*/else if(type.equals("5")){
             String[] names = {"xssr", "zyxs"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
-            data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), names));
-            data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
+            data.put("year", getByMonth(firstMonthDate, monthDate, names));
+            data.put("priYear", getByMonth(priFirstMonthDate, priMonthDate, names));
         }else if(type.equals("6")){
             String[] names = {"rkddlbhms", "rkddlzyms", "ckddlbhms", "ckddlzyms"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
-            data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), names));
-            data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
+            data.put("year", getByMonth(firstMonthDate, monthDate, names));
+            data.put("priYear", getByMonth(priFirstMonthDate, priMonthDate, names));
         }else if(type.equals("7")){
             String[] names = {"byljrkz", "byljckz", "qmzkhz", "qmzkhwzl", "rkhwzl", "ckhwzl"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
             String[] temp = {"byljrkz", "byljckz"};
-            data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), temp));
-            data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), temp));
+            data.put("year", getByMonth(firstMonthDate, monthDate, temp));
+            data.put("priYear", getByMonth(priFirstMonthDate, priMonthDate, temp));
         }else if(type.equals("8")){
             String[] names = {"fwqysl", "hzqy", "hyqys"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
         }else if(type.equals("9")){
             String[] names = {"ygxc"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
-            data.put("year", getByMonth(TimeUtil.getYearFirstMonthTime(), TimeUtil.getNow(), names));
-            data.put("priYear", getByMonth(TimeUtil.getPriYearFirstMonthTime(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
+            data.put("year", getByMonth(firstMonthDate, monthDate, names));
+            data.put("priYear", getByMonth(priFirstMonthDate, priMonthDate, names));
         }else if(type.equals("10")){
             String[] names = {"qmcyrs", "gnry", "gwry", "jsry", "qmcyryqt"};
-            data.put("month", getByMonth(TimeUtil.getNow(), TimeUtil.getNow(), names));
-            data.put("priMonth", getByMonth(TimeUtil.getPriNow(), TimeUtil.getPriNow(), names));
+            data.put("month", getByMonth(monthDate, monthDate, names));
+            data.put("priMonth", getByMonth(priMonthDate, priMonthDate, names));
         }
         if(getPara("callback") != null){
             String json = JsonKit.toJson(ResponseUtil.setRes("00", "表3数据统计分析", data));

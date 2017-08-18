@@ -11,6 +11,7 @@ import com.hzhwck.myEnum.TableNames;
 import com.jfinal.core.Controller;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Record;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
@@ -18,10 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by 陈忠意 on 2017/6/5.
@@ -85,7 +83,10 @@ public class BaseController extends Controller {
                 System.out.println(map.toString());
                 for (String temp : map.keySet()) {
                     if(map.get(temp) == null) continue;
-                    str.append(temp + "=" + Utf8URLencode(map.get(temp)) + "&");
+                    //if(temp.equals("ssgj") || temp.equals("ssz"))   continue;
+                    //String param = map.get(temp).toString();
+                    //str.append(temp + "=" + Utf8URLencode(map.get(temp)) + "&");
+                    str.append(temp + "=" + URLEncoder.encode(map.get(temp), "UTF-8") + "&");
                 }
                 int len = str.toString().length();
                 str = new StringBuffer(str.toString().substring(0, len - 1));
@@ -94,8 +95,39 @@ public class BaseController extends Controller {
                 e.printStackTrace();
             }
         }
-        System.out.println("str --> " + str.toString());
-        return str.toString();
+        System.out.println("str --> " + str.toString().replaceAll("\\+", "%20"));
+        return str.toString().replaceAll("\\+", "%20");
+    }
+
+    public static String getInt(String param){
+        int num = 0;
+        for(int i = 0;i < param.length();++i){
+            if((param.charAt(i) >= '0' && param.charAt(i) <= '9') || param.charAt(i) == '.'){
+                if(param.charAt(i) == '.')  num++;
+            }else
+                return param;
+        }
+        if(num <= 1){
+            double d = Double.parseDouble(param);
+            int i = (int) d;
+            System.out.println("double = " + d + ", i = " + i);
+            if(d == i)  return "" + i;
+            return param;
+        }
+        return param;
+    }
+
+    public static void main(String[] args){
+        Scanner in = new Scanner(System.in);
+        while(in.hasNextLine()){
+            String temp = in.nextLine();
+            //System.out.println("temp = " + getInt(temp));
+            try {
+                System.out.println(URLEncoder.encode(temp, "UTF-8").replaceAll("\\+", "%20"));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 
     private String getUTF(String str){
@@ -155,12 +187,16 @@ public class BaseController extends Controller {
         }
         List<Record> records = Db.find("select " + sb.toString() + w + "hwcssgj " +
                 "from " + TableNames.hwcReportPlans + ", " + TableNames.hwcReports + ", " + TableNames.hwcTable3 + ", " + TableNames.hwcWarehouses + " " +
-                "where " + r + "status = 5 and " + r + "tableId = 3 and " + r + "tableReportId = " + t + "id and " + r + "planId = " + p + "id and " + r + "warehouseId = " + w + "id " +
+                "where " + r + "status != 0 and " + r + "tableId = 3 and " + r + "tableReportId = " + t + "id and " + r + "planId = " + p + "id and " + r + "warehouseId = " + w + "id " +
                 "and DATE_FORMAT(" + p + "round, '%Y-%m') >= '" + sf.format(startAt) + "' and DATE_FORMAT(" + p + "round, '%Y-%m') <= '" + sf.format(endAt) + "' group by " + w + "hwcssgj order by " + w + "hwcssgj");
         for(Record record : records){
             record.set("country", Country.getByCode(record.getStr("hwcssgj")));
         }
         return records;
+    }
+
+    public static String getMd5Password(String password){
+        return DigestUtils.md5Hex(password);
     }
 
 }

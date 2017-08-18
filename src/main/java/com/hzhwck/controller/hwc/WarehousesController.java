@@ -42,10 +42,10 @@ public class WarehousesController extends BaseController{
                 forwardAction("/api/hwc/warehouses/search");
                 success = true;
             }
-        }else if(getRequest().getMethod().equals("PUT")){
+        }else if(getRequest().getMethod().equals("PATCH")){
             String id = getPara(0);
             if(id != null){
-                System.out.println("[PUT] update id -- " + id);
+                System.out.println("[PATCH] update id -- " + id);
                 //forwardAction("/api/hwc/warehouses/modify/" + id);
                 redirect("/api/hwc/warehouses/modify/" + id + "?" + getParam());
                 success = true;
@@ -103,11 +103,14 @@ public class WarehousesController extends BaseController{
             warehouses.delete();
             return ;
         }
+        Warehouses w = Warehouses.dao.findById(warehouses.get("id"));
+        w.put("ssgj", Country.getByCode(w.get("hwcssgj").toString()));
+        w.put("ssz", Contient.getByCode(w.get("hwcssz").toString()));
         if(getPara("callback") != null){
-            String json = JsonKit.toJson(ResponseUtil.setRes("00", "添加海外仓库成功", Warehouses.dao.findById(warehouses.get("id"))));
+            String json = JsonKit.toJson(ResponseUtil.setRes("00", "添加海外仓库成功", w));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         }else {
-            renderJson(ResponseUtil.setRes("00", "添加海外仓库成功", Warehouses.dao.findById(warehouses.get("id"))));
+            renderJson(ResponseUtil.setRes("00", "添加海外仓库成功", w));
         }
     }
 
@@ -130,11 +133,14 @@ public class WarehousesController extends BaseController{
             }
             return ;
         }
+        Warehouses w = Warehouses.dao.findById(warehouses.get("id"));
+        w.put("ssgj", Country.getByCode(w.get("hwcssgj").toString()));
+        w.put("ssz", Contient.getByCode(w.get("hwcssz").toString()));
         if(getPara("callback") != null){
-            String json = JsonKit.toJson(ResponseUtil.setRes("00", "更新海外仓库成功", Warehouses.dao.findById(warehouses.get("id"))));
+            String json = JsonKit.toJson(ResponseUtil.setRes("00", "更新海外仓库成功", w));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         }else {
-            renderJson(ResponseUtil.setRes("00", "更新海外仓库成功", Warehouses.dao.findById(warehouses.get("id"))));
+            renderJson(ResponseUtil.setRes("00", "更新海外仓库成功", w));
         }
     }
 
@@ -280,6 +286,8 @@ public class WarehousesController extends BaseController{
         Page<Warehouses> data = Warehouses.getPage(pageNumber, pageSize, oderBy, oder, filter, TableNames.hwcSamples + ", " + TableNames.hwcWarehouses);
         for(Warehouses warehouse : data.getList()){
             warehouse.put("sample", Samples.dao.findById(warehouse.get("sampleId")));
+            warehouse.put("ssgj", Country.getByCode(warehouse.get("hwcssgj").toString()));
+            warehouse.put("ssz", Contient.getByCode(warehouse.get("hwcssz").toString()));
         }
         if(getPara("callback") != null){
             String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "获取海外仓库信息成功", data));
@@ -295,11 +303,14 @@ public class WarehousesController extends BaseController{
     @ActionKey("/api/hwc/warehouses/id")
     public void getWarehouseById(){
         String id = getPara(0);
+        Warehouses w = Warehouses.dao.findById(id);
+        w.put("ssgj", Country.getByCode(w.get("hwcssgj").toString()));
+        w.put("ssz", Contient.getByCode(w.get("hwcssz").toString()));
         if(getPara("callback") != null){
-            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "根据id获取海外仓库信息成功", Warehouses.dao.findById(id)));
+            String json = JsonKit.toJson(ResponseUtil.setRes(CodeType.success, "根据id获取海外仓库信息成功", w));
             renderJson(getPara("callback", "default") + "(" + json + ")");
         }else {
-            renderJson(ResponseUtil.setRes(CodeType.success, "根据id获取海外仓库信息成功", Warehouses.dao.findById(id)));
+            renderJson(ResponseUtil.setRes(CodeType.success, "根据id获取海外仓库信息成功", w));
         }
     }
 

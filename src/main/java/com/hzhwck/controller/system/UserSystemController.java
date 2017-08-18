@@ -123,7 +123,15 @@ public class UserSystemController extends BaseController{
         for(String sys : systems.split(",")){
             String[] temp = sys.split(":");
             UserSystem us = UserSystem.getBySystemAndAccountId(temp[0].trim(), accountId);
-            if(us == null)  continue;
+            if(us == null)  {
+                if(Systems.getSystemsByCode(temp[0].trim()) == null || temp.length == 1) continue;
+                UserSystem userSystem = new UserSystem()
+                        .set("system", temp[0].trim())
+                        .set("accountId", accountId)
+                        .set("right", temp[1].trim());
+                userSystem.save();
+                continue;
+            }
             if(temp.length == 1)
                 us.set("right", null);
             else {

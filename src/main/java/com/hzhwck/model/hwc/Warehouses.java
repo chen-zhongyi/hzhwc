@@ -23,6 +23,6 @@ public class Warehouses extends Model<Warehouses> {
     }
 
     public static List<Warehouses> getLatAndLng(){
-        return Warehouses.dao.find("select hwcmc, sampleId, lat, lng, hwcxxdz, cklx, ckyt from " + tableName + " where lat is not null and lng is not null and status = 1");
+        return Warehouses.dao.find("select hwcmc, sampleId, lat, lng, hwcxxdz, cklx, ckyt from " + tableName + " where lat is not null and lng is not null ");
     }
 }
