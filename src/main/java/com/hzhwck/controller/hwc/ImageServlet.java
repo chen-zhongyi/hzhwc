@@ -44,7 +44,7 @@ public class ImageServlet extends HttpServlet {
         String path = PathKit.getWebRootPath() + File.separator + "hwckimages";
         File linshi = new File(path);//当超过500K的时候，存到一个临时文件夹中
         factory.setRepository(linshi);
-        upload.setSizeMax(1024 * 1024 * 500);//设置上传的文件总的大小不能超过5M
+        upload.setSizeMax(1024 * 1024 * 550);//设置上传的文件总的大小不能超过5M
         try {
             // 1. 得到 FileItem 的集合 items
             List<FileItem> /* FileItem */items = upload.parseRequest(request);

@@ -36,7 +36,7 @@ public class RegisterLoginController extends BaseController{
         boolean success = Db.tx(new IAtom() {
             public boolean run() throws SQLException {
                 String userName = getPara("userName");
-                String pwd = getPara("pwd");
+                String pwd = getMd5Password(getPara("pwd"));
                 String realName = getPara("realName");
                 User user = new User()
                         .set("realName", realName)

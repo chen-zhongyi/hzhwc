@@ -117,7 +117,7 @@ public class BaseController extends Controller {
         return param;
     }
 
-    public static void main(String[] args){
+    /*public static void main(String[] args){
         Scanner in = new Scanner(System.in);
         while(in.hasNextLine()){
             String temp = in.nextLine();
@@ -128,7 +128,7 @@ public class BaseController extends Controller {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 
     private String getUTF(String str){
         String res = "";
@@ -197,6 +197,14 @@ public class BaseController extends Controller {
 
     public static String getMd5Password(String password){
         return DigestUtils.md5Hex(password);
+    }
+
+    public static void main(String[] args){
+        Scanner in = new Scanner(System.in);
+        while(in.hasNextLine()){
+            String str = in.nextLine();
+            System.out.println(getMd5Password(str));
+        }
     }
 
 }

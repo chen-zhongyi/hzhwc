@@ -2000,6 +2000,7 @@ public class PDF {
                 String imagePath = unZip + File.separator + zipEntry.getName();
                 if(imagePath.contains("__MACOSX"))  continue;
                 System.out.println("imagePath = " + imagePath);
+                new File(imagePath).getParentFile().mkdirs();
                 File image = new File(imagePath);
                 images.add(imagePath);
                 if(! image.exists()){
@@ -2037,8 +2038,10 @@ public class PDF {
     }
 
     public static void main(String[] args) throws IOException{
+        String unpath = "E:" + File.separator + "images";
+        unZip("C:\\Users\\陈忠意\\Desktop\\2017-09-06-05-55-13系统介绍.zip", unpath);
 
-        String json = "";
+        /*String json = "";
 
         java.util.List<Map<String, Object>> table11 = new LinkedList<Map<String, Object>>();
         String temp = json;
@@ -2048,7 +2051,7 @@ public class PDF {
             System.out.println(a);
             table11.addAll(a);
         }
-        System.out.println(table11);
+        System.out.println(table11);*/
 
         /*String path = "E:\\doctorimages\\doctorimages.zip";
         String unPath = "E:\\doctorimages\\images";

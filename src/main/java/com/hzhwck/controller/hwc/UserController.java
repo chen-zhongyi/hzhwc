@@ -92,8 +92,8 @@ public class UserController extends BaseController {
             }
             return ;
         }
-        String oldPwd = getPara("oldPwd");
-        String pwd = getPara("pwd");
+        String oldPwd = getMd5Password(getPara("oldPwd"));
+        String pwd = getMd5Password(getPara("pwd"));
         Map<String, Object> loginUser = getSessionAttr("user");
         if(loginUser.get("pwd").toString().equals(oldPwd)){
             Account account = Account.dao.findById(loginUser.get("id"));
@@ -163,7 +163,7 @@ public class UserController extends BaseController {
                 Account account = new Account();
                 account.set("user", "hwc_users:" + user.get("id"));
                 account.set("userName", getPara("userName"));
-                account.set("pwd", getPara("pwd"));
+                account.set("pwd", getMd5Password(getPara("pwd")));
                 account.set("createAt", TimeUtil.getNowTime());
                 Map<String, Object> loginUser = getSessionAttr("user");
                 account.set("createBy", loginUser.get("id"));
@@ -216,7 +216,7 @@ public class UserController extends BaseController {
                 }
                 String pwd = getPara("pwd");
                 if(pwd != null){
-                    account.set("pwd", pwd);flag = true;
+                    account.set("pwd", getMd5Password(pwd));flag = true;
                 }
                 if(flag == true && Account.modify(account) == null) return false;
                 account = Account.dao.findById(getPara(0));
@@ -309,7 +309,7 @@ public class UserController extends BaseController {
     @ActionKey("/api/hwc/users/login")
     public void login(){
         String userName = getPara("userName");
-        String pwd = getPara("pwd");
+        String pwd = getMd5Password(getPara("pwd"));
         Account account = Account.findByUserName(userName);
         if(account.getInt("status") == Status.error){
             if(getPara("callback") != null) {
