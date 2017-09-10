@@ -705,7 +705,7 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 8).add(isNull(data.get("qtsm3")))
+        cell = new Cell(1, 8).add(isNull(data.get("qtsm2")))
                 .setHeight(70)
                 .addStyle(codeArea);
         table.addCell(cell);
@@ -879,7 +879,7 @@ public class PDF {
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .addStyle(code);
         table.addCell(cell);
-        cell = new Cell(1, 8).add(isNull(data.get("qtsm2")))
+        cell = new Cell(1, 8).add(isNull(data.get("qtsm3")))
                 .setHeight(120)
                 .addStyle(codeArea);
         table.addCell(cell);
@@ -1981,7 +1981,7 @@ public class PDF {
         File file = new File(path);
         ZipFile zipFile = null;
         try{
-            zipFile = new ZipFile(file, "UTF-8");
+            zipFile = new ZipFile(file, "GBK");
         }catch(IOException e){
             e.printStackTrace();
             log.info("压缩文件不存在");
@@ -1998,8 +1998,12 @@ public class PDF {
                 continue;
             }else {
                 String imagePath = unZip + File.separator + zipEntry.getName();
-                if(imagePath.contains("__MACOSX"))  continue;
                 System.out.println("imagePath = " + imagePath);
+                if(imagePath.lastIndexOf(".") == -1)    continue;
+                String suffer = imagePath.substring(imagePath.lastIndexOf("."), imagePath.length());
+                if(imagePath.contains("__MACOSX"))  continue;
+                suffer = suffer.toLowerCase();
+                if(!(suffer.equals(".jpg") || suffer.equals(".jpeg") || suffer.equals(".png") || suffer.equals(".gif"))) continue;
                 new File(imagePath).getParentFile().mkdirs();
                 File image = new File(imagePath);
                 images.add(imagePath);
@@ -2039,7 +2043,7 @@ public class PDF {
 
     public static void main(String[] args) throws IOException{
         String unpath = "E:" + File.separator + "images";
-        unZip("C:\\Users\\陈忠意\\Desktop\\2017-09-06-05-55-13系统介绍.zip", unpath);
+        unZip("C:\\Users\\陈忠意\\Desktop\\2017-09-01-03-38-42投资协议.zip", unpath);
 
         /*String json = "";
 

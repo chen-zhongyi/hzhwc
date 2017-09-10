@@ -394,11 +394,11 @@ public class TableController extends BaseController{
     @Before(GET.class)
     @ActionKey("/api/hwc/tables/data")
     public void getData(){
-        Table3 table3 = Table3.dao.findById("1");
+        /*Table3 table3 = Table3.dao.findById("1");
         for(String temp : table3.toRecord().getColumnNames()){
             System.out.print("sum(" + TableNames.hwcTable3.split(" ")[1] + "." + temp + ") as " + temp + ", ");
         }
-        System.out.println();
+        System.out.println();*/
 
         Date date = getParaToDate("date");
         String tableId = getPara("tableId");
