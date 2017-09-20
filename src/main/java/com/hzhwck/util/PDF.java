@@ -3,6 +3,7 @@ package com.hzhwck.util;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.hzhwck.model.hwc.*;
+import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.color.Color;
 import com.itextpdf.kernel.font.PdfFont;
@@ -68,7 +69,8 @@ public class PDF {
         SimpleDateFormat sf = new SimpleDateFormat("yyyy 年 MM 月 dd 日");
         Date date = new Date(System.currentTimeMillis());
 
-        PdfFont font = PdfFontFactory.createFont("STSong-Light", "UniGB-UCS2-H", false);
+        //PdfFont font = PdfFontFactory.createFont("STSong-Light", "UniGB-UCS2-H", false);
+        PdfFont font = PdfFontFactory.createFont("c://windows//fonts//simsun.ttc,1", PdfEncodings.IDENTITY_H, false);
         Style code = new Style();
         code.setFont(font)
                 .setFontSize(11)
